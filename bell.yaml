@@ -1,0 +1,96 @@
+#
+bell:
+#
+##############
+  input_boolean:
+##############
+    doorbell_input_boolean:
+      name: doorbell_input_boolean
+      icon: mdi:doorbell
+
+##############
+  automation: #Автоматизации
+##############
+
+    - alias: doorbellRingsTurnOff # Выключаем звонок на ночь
+      trigger:
+        - platform: state
+          entity_id: binary_sensor.sens_day
+          to: "off"
+      action:
+        - service: input_boolean.turn_off
+          data:
+            entity_id: input_boolean.doorbell_input_boolean
+
+    - alias: doorbellRingsTurnOn # Включаем звонок на день и когда приходим
+      trigger:
+        - platform: state
+          entity_id: binary_sensor.sens_day
+          to: "on"
+        - platform: state
+          entity_id: group.Core
+          to: "home"
+      action:
+        - service: input_boolean.turn_on
+          data:
+            entity_id: input_boolean.doorbell_input_boolean
+
+    - alias: doorbellRingsPush # Нажали звонок
+      trigger:
+        - platform: state
+          entity_id:
+            - binary_sensor.0x00158d0003927213_contact
+          to: "off"
+      condition:
+        - condition: state
+          entity_id: input_boolean.doorbell_input_boolean
+          state: "on"
+      action:
+        - service: switch.turn_on
+          data:
+            entity_id: switch.0x842e14fffe11c2e8
+
+    - alias: doorbellRingsPushSilence # Нажали звонок без шумный режимы
+      trigger:
+        - platform: state
+          entity_id:
+            - binary_sensor.0x00158d0003927213_contact
+          to: "off"
+      condition:
+        - condition: state
+          entity_id: input_boolean.doorbell_input_boolean
+          state: "off"
+      action:
+        - service: notify.telegram
+          data_template:
+            title: "🔔🚪"
+            message: "Кто то звонит в дверь."
+
+    - alias: doorbellRingsPushOutHome # Нажали звонок не кого дома 
+      trigger:
+        - platform: state
+          entity_id:
+            - binary_sensor.0x00158d0003927213_contact
+          to: "off"
+      condition:
+        - condition: state
+          entity_id: group.Core
+          state: "not_home"
+      action:
+        - service: notify.telegram
+          data_template:
+            title: "🔔🚪"
+            message: "Кто то звонит в дверь."
+
+    - alias: doorbellRingsOff # Отпустили звонок
+      trigger:
+        - platform: state
+          entity_id:
+            - binary_sensor.0x00158d0003927213_contact
+          to: "on"
+          for:
+            seconds: 1
+      action:
+        - service: switch.turn_off
+          data:
+            entity_id: switch.0x842e14fffe11c2e8

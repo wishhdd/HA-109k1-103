@@ -1,0 +1,20 @@
+email:
+  #
+  #
+##############
+  notify: #Автоматизации
+  - name: "email_duke"
+    platform: smtp
+    server: "smtp.gmail.com"
+    port: 587
+    timeout: 15
+    sender: !secret emailUser
+    encryption: starttls
+    username: !secret emailUser
+    password: !secret emailPass
+    recipient: !secret emailRecipient
+    sender_name: "Константин"
+##############
+##############
+  automation: #Автоматизации
+##############

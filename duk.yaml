@@ -1,0 +1,42 @@
+#
+duk:
+#
+
+##############
+  automation: #Автоматизации
+##############
+
+    - alias: "duk_send"
+      trigger:
+        - platform: time
+          at: "23:05:00"
+      condition:
+        - condition: template
+          value_template: "{{24 == now().day}}"
+      action:
+        - service: notify.notify_events
+          data:
+            message: "800153803 {{(states('sensor.cold_water_counter_sensor')|float|round(0))}} {{(states('sensor.hot_water_counter_sensor')|float|round(0))}} {{(states('sensor.main_electricity_meter_1')|float|round(0))}} {{(states('sensor.main_electricity_meter_2')|float|round(0))}} Академика Сахарова 109к1-103"
+
+    #Передай показания счетчиков
+    - alias: "passWaterMeterReading"
+      trigger:
+        - platform: time
+          at: "20:00:00"
+      condition:
+        - condition: template
+          value_template: "{{23 == now().day}}"
+      action:
+        - service: notify.telegram
+          data:
+            title: "🚥 📏 📙"
+            message: |
+              в 23.05 в ДУК будет переданы следующее сообщение проверь => 800153803 {{(states('sensor.cold_water_counter_sensor')|float|round(0))}} {{(states('sensor.hot_water_counter_sensor')|float|round(0))}} {{(states('sensor.main_electricity_meter_1')|float|round(0))}} {{(states('sensor.main_electricity_meter_2')|float|round(0))}} Академика Сахарова 109к1-103 <=
+              
+              =========
+              
+              Потратили холодной воды за этот месяц {{ (states('sensor.cold_water_monthly')|float * 1000) | int}}л.
+              Потратили горячей воды за этот месяц {{ (states('sensor.hot_water_monthly')|float * 1000) | int}}л.
+              Сожгли электричества днем {{(states('sensor.main_electricity_meter_day')|float) | int}} кВт на {{(states('sensor.main_electricity_meter_consumption_day_money')|float) | int}} р.
+              Сожгли электричества ночью {{(states('sensor.main_electricity_meter_night')|float) | int}} кВт на {{(states('sensor.main_electricity_meter_consumption_night_money')|float) | int}} р.
+              Бойлер сожрал {{(states('sensor.boiler_all_money')|float) | int}} р.

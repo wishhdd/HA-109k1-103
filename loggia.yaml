@@ -1,0 +1,141 @@
+loggia:
+  ##############
+  timer:
+    ##############
+    warm_floor:
+      duration: "00:15:00"
+  ##############
+  binary_sensor:
+    ##############
+    - platform: template
+      sensors:
+        loggia_window:
+          friendly_name: "окно на лоджии"
+          value_template: >
+            {{ is_state('binary_sensor.0x00158d0006c3ff03_contact', 'on')
+            or is_state('binary_sensor.0x00158d0006c3cfcc_contact', 'on')
+            }}
+          icon_template: >
+            {% if (is_state('binary_sensor.0x00158d0006c3ff03_contact', 'on')
+            or is_state('binary_sensor.0x00158d0006c3cfcc_contact', 'on')) %}
+              mdi:window-open
+            {% else %}
+              mdi:window-closed
+            {% endif %}
+
+  ##############
+  automation: #Автоматизации
+    ##############
+
+    - alias: "timer_start_when_moving_on_loggia" # таймер старт при движении на лоджии
+      trigger:
+        platform: state
+        entity_id: binary_sensor.0x00158d0003cf2082_occupancy
+        to: "on"
+      action:
+        - service: timer.start
+          target:
+            entity_id: timer.warm_floor
+
+    - alias: "turn_on_floor_heating_by_timer" # включаем тёплый пол по таймеру
+      trigger:
+        - platform: event
+          event_type: timer.started
+          event_data:
+            entity_id: timer.warm_floor
+      action:
+        - service: climate.set_temperature
+          target:
+            entity_id:
+              - climate.0xbc33acfffe5ec782 # Теплый пол на лоджии
+          data:
+            temperature: 24
+            hvac_mode: "heat"
+
+    - alias: "turnoff_warm_floor_by_timer"
+      trigger:
+        - platform: event
+          event_type: timer.finished
+          event_data:
+            entity_id: timer.warm_floor
+      action:
+        - service: climate.set_temperature
+          target:
+            entity_id:
+              - climate.0xbc33acfffe5ec782 # Теплый пол на лоджии
+          data:
+            temperature: 19
+            hvac_mode: "heat"
+
+    - alias: "turnoff_heating_loggia_if_window_open" # Выклчаем отопление если окно открыто
+      trigger:
+        platform: state
+        entity_id: binary_sensor.loggia_window
+        to: "on"
+        for:
+          minutes: 1
+      action:
+        - service: climate.set_hvac_mode
+          target:
+            entity_id:
+              - climate.0xbc33acfffe5ec782 # Теплый пол на лоджии
+              - climate.ballu_heater_01 # обогревать Баллу
+          data:
+            hvac_mode: "off"
+
+    - alias: " turnon_heating_loggia_if_window_close" # Вклчаем отопление если окно закрыто
+      trigger:
+        platform: state
+        entity_id: binary_sensor.loggia_window
+        to: "off"
+        for:
+          minutes: 1
+      action:
+        - service: climate.set_hvac_mode
+          target:
+            entity_id:
+              - climate.ballu_heater_01 # обогревать Баллу
+          data:
+            hvac_mode: "heat"
+
+    - alias: "rightButtonLESstripOn" #
+      trigger:
+        platform: state
+        entity_id: switch.0x60a423fffeaae3a6_right
+        to: "on"
+      action:
+        - service: light.turn_on
+          target:
+            entity_id: light.wled
+        - service: timer.cancel
+          target:
+            entity_id: timer.move_led
+
+    - alias: "rightButtonLESstripOff" #
+      trigger:
+        platform: state
+        entity_id: switch.0x60a423fffeaae3a6_right
+        to: "off"
+      action:
+        - service: light.turn_off
+          target:
+            entity_id: light.wled
+#    - alias: "ledOn-rightButtonOn" #
+#      trigger:
+#        platform: state
+#        entity_id: light.wled
+#        to: "on"
+#      action:
+#        - service: switch.turn_on
+#          target:
+#            entity_id: switch.0x60a423fffeaae3a6_right
+
+#    - alias: "ledOff-rightButtonOff" #
+#      trigger:
+#        platform: state
+#        entity_id: light.wled
+#        to: "off"
+#      action:
+#        - service: switch.turn_off
+#          target:
+#            entity_id: switch.0x60a423fffeaae3a6_right

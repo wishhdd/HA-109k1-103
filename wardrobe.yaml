@@ -1,0 +1,79 @@
+wardrobe:
+  #
+##############
+  automation: #Автоматизации
+##############
+
+    - alias: "turnOnLightWardrobe" # Включение света в гардеробе
+      trigger:
+        platform: state
+        entity_id: binary_sensor.light_wardrobe
+        to: "on"
+      action:
+        - service: switch.turn_on
+          data:
+            entity_id: switch.0xec1bbdfffe0e4df8_right
+        - service: input_number.increment
+          data:
+            entity_id: input_number.tg
+
+    - alias: "inputNumberIncrementLightWardrobe" # набираем очки
+      trigger:
+        platform: state
+        entity_id: binary_sensor.0x00158d00045e1c80_occupancy
+        to: "on"
+      action:
+        - service: input_number.increment
+          data:
+            entity_id: input_number.tg
+
+    - alias: "turnOffLightWardrobe" # Выключение света в гардеробе
+      trigger:
+        platform: state
+        entity_id: binary_sensor.0x00158d00045e1c80_occupancy
+        to: "off"
+        for:
+          minutes: "{{states('input_number.tg')|int }}"
+      action:
+        - service: switch.turn_off
+          data:
+            entity_id: switch.0xec1bbdfffe0e4df8_right
+
+    - alias: lightGarderobOff #  Свет выключен в гардеробе, сбрасываем счетчик
+      trigger:
+        - platform: state
+          entity_id: switch.0xec1bbdfffe0e4df8_right
+          to:
+            - "off"
+          for:
+            minutes: 1
+      action:
+        - service: input_number.set_value
+          target:
+            entity_id: input_number.tg
+          data:
+            value: 0.5
+
+##############
+  input_number: #Ввод цифр
+##############
+    tg:
+      name: tg
+      initial: 0.5
+      min: 0.5
+      max: 15
+      step: 1
+      icon: mdi:update
+
+##############
+  binary_sensor:
+##############
+
+    - platform: template
+      sensors:
+        light_wardrobe:
+          friendly_name: "Свет в гардеробе"
+#          icon_template: mdi:air-conditioner
+          value_template: >
+            {{ is_state('binary_sensor.sens_day', 'on')
+            and is_state('binary_sensor.0x00158d00045e1c80_occupancy', 'on')}}

@@ -1,0 +1,110 @@
+#
+conditioner:
+#
+##############
+  binary_sensor:
+##############
+    - platform: template
+      sensors:
+        air_conditioner:
+          friendly_name: "Кондиционер"
+          icon_template: mdi:air-conditioner
+          value_template: >
+            {{ is_state('binary_sensor.sens_day', 'on')
+            and is_state('input_boolean.air_conditioner_input_boolean', 'on')
+            and is_state('group.core', 'home')}}
+
+##############
+  input_boolean:
+##############
+    air_conditioner_input_boolean:
+      name: air_conditioner_input_boolean
+      icon: mdi:air-conditioner
+
+##############
+  input_number:
+##############
+    cond_max_temp:
+      name: Turn on the air conditioner input number
+      min: 20
+      max: 30
+      step: 0.5
+      initial: 27
+
+    cond_min_temp:
+      name: Turn off the air conditioner input number
+      min: 20
+      max: 30
+      step: 0.5
+      initial: 24
+
+##############
+  switch:
+##############
+    - platform: template
+      switches:
+        air_conditioner_switch:
+          value_template: "{{ is_state('input_boolean.air_conditioner_input_boolean', 'on') }}"
+          turn_on:
+            service: input_boolean.turn_on
+            data:
+              entity_id: input_boolean.air_conditioner_input_boolean
+          turn_off:
+            service: input_boolean.turn_off
+            data:
+              entity_id: input_boolean.air_conditioner_input_boolean
+
+##############
+  automation:
+##############
+
+    - alias: airConditioningTurnOn # кондиционер включается
+      trigger:
+        - platform: numeric_state
+          entity_id: sensor.cleargrass_air_temperature
+          above: input_number.cond_max_temp
+          for: 00:05:00
+      condition:
+        - condition: state
+          entity_id: binary_sensor.air_conditioner
+          state: "on"
+      action:
+        - service: script.cond_bedroom_24_fl
+
+    - alias: airConditioningTurnOff # кондиционер выключаем
+      trigger:
+        - platform: numeric_state
+          entity_id: sensor.cleargrass_air_temperature
+          below: input_number.cond_min_temp
+          for: 00:05:00
+      condition:
+        - condition: state
+          entity_id: binary_sensor.air_conditioner
+          state: "on"
+      action:
+        - service: script.cond_bedroom_off
+
+    - alias: "airConditioningTurnOffWar" #Быстрое выключение кондиционера
+      trigger:
+        platform: state
+        entity_id: switch.air_conditioner_switch
+        to: "off"
+      action:
+        - service: script.cond_bedroom_off
+
+
+    - alias: "airConditioningTurnOnWar" #Быстрое включение кондиционера
+      trigger:
+        platform: state
+        entity_id: switch.air_conditioner_switch
+        to: "on"
+      action:
+        - service: script.cond_bedroom_24_fl
+
+    - alias: "airConditioningTurnOffSensor" #Выключаем кондер по сенсору кондиционера
+      trigger:
+        platform: state
+        entity_id: binary_sensor.air_conditioner
+        to: "off"
+      action:
+        - service: script.cond_bedroom_off

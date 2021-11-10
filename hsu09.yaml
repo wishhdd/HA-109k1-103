@@ -1,0 +1,12 @@
+hsu09:
+##############
+  climate: #Климат
+##############
+    - platform: smartir
+      name: Кухня
+      unique_id: kitchen-ac
+      device_code: 1325
+      controller_data: remote.rm4cm01_remote
+      temperature_sensor: sensor.0x00158d0004189010_temperature
+      humidity_sensor: sensor.0x00158d0004189010_humidity
+#      power_sensor: binary_sensor.ac_power

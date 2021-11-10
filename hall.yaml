@@ -1,0 +1,231 @@
+hall:
+  ##############
+  sensor: #Сенсторы
+    ##############
+    # Необходимая влажность в ванной
+    - platform: template
+      sensors:
+        hall_main_temperature:
+          friendly_name: "Температура в зале"
+          unit_of_measurement: "°C"
+          icon_template: mdi:thermometer
+          value_template: >-
+            {{((states('sensor.0x00158d0004186ed6_temperature')|float+ states('sensor.0x00158d00063dd803_temperature')|float)/2)|round(1)}}
+  ##############
+  automation: #Автоматизации
+    ##############
+
+    - alias: " turnoff_heating_hall_if_window_open" # Выклчаем отопление если окно открыто
+      trigger:
+        platform: state
+        entity_id: binary_sensor.0x00158d0006c3d02b_contact
+        to: "on"
+        for:
+          minutes: 1
+      action:
+        - service: climate.set_hvac_mode
+          target:
+            entity_id:
+              - climate.gostinaia # Батарея в зале
+          data:
+            hvac_mode: "off"
+
+    - alias: " turnon_heating_hall_if_window_close" # Вклчаем отопление если окно закрыто
+      trigger:
+        platform: state
+        entity_id: binary_sensor.0x00158d0006c3d02b_contact
+        to: "off"
+        for:
+          minutes: 1
+      action:
+        - service: climate.set_hvac_mode
+          target:
+            entity_id:
+              - climate.gostinaia # Батарея в зале
+          data:
+            hvac_mode: "heat"
+
+    - alias: "turnoff_battery_light_when_central_light_turnedon" # выклчаем свет батареи когда включе оснвной свет
+      trigger:
+        platform: state
+        entity_id: switch.0x680ae2fffe71aff5_left #цетральный свет
+        to: "on"
+      action:
+        - service: switch.turn_off
+          data:
+            entity_id: switch.0x842e14fffefce063_l2
+
+    - alias: "battery_light_by_movement" #Свет по движению
+      trigger:
+        platform: state
+        entity_id: binary_sensor.0x000d6f00159a3ed7_occupancy
+        to: "on"
+      condition:
+        condition: and
+        conditions:
+          - condition: state
+            entity_id: sun.sun
+            state: "below_horizon"
+          - condition: state
+            entity_id: switch.0x680ae2fffe71aff5_left #Свет батареи
+            state: "off"
+          - condition: state
+            entity_id: media_player.samsung_ue40d6100_2 #Телевизор в зале
+            state: "off"
+      action:
+        - service: switch.turn_on
+          data:
+            entity_id: switch.0x842e14fffefce063_l2
+
+    - alias: "turnOnBatteryLightWhenTurningOffTV" #включаем свет батареи при выклчюении телевизора
+      trigger:
+        platform: state
+        entity_id: media_player.samsung_ue40d6100_2 #Телевизор в зале
+        from: "on"
+        to: "off"
+      condition:
+        condition: and
+        conditions:
+          - condition: state
+            entity_id: sun.sun
+            state: "below_horizon"
+          - condition: state
+            entity_id: switch.0x680ae2fffe71aff5_left #свет зал центральный
+            state: "off"
+      action:
+        - service: switch.turn_on
+          data:
+            entity_id: switch.0x842e14fffefce063_l2 #свет в батареи
+
+
+    - alias: "turnOffBatteryLightWhenTurningOnTV" #выключаем свет батареи при выключении телевизора
+      trigger:
+        platform: state
+        entity_id: media_player.samsung_ue40d6100_2 #Телевизор в зале
+        to: "on"
+      action:
+        - service: switch.turn_off
+          data:
+            entity_id: switch.0x842e14fffefce063_l2 #свет в батареи
+
+    - alias: TurnOnHumidifierInLivingRoom # Включаем увлажнитель
+      trigger:
+        - platform: numeric_state
+          entity_id: sensor.0x00158d0004186ed6_humidity
+          below: 45
+          for:
+            minutes: 5
+      condition:
+        - condition: state
+          entity_id: group.Core
+          state: "home"
+        - condition: state
+          entity_id: binary_sensor.open_windows
+          state: "off"
+      action:
+        - service: switch.turn_on
+          data:
+            entity_id: switch.0x842e14fffefce063_l4 #Увлажнитель
+
+    - alias: TurnOffHumidifierInLivingRoom # Выключаем увлажнитель
+      trigger:
+        - platform: numeric_state
+          entity_id: sensor.0x00158d0004186ed6_humidity
+          above: 50
+          for:
+            minutes: 5
+      action:
+        - service: switch.turn_off
+          data:
+            entity_id:
+              - switch.0x842e14fffefce063_l4 #Увлажнитель
+
+    - alias: CheckWaterHall #Оповещение что кончилась вода
+      trigger:
+        - platform: numeric_state
+          entity_id: sensor.0x00158d0004186ed6_humidity
+          below: 40
+          for:
+            minutes: 5
+      action:
+        - choose:
+            - conditions: >
+                {{states('device_tracker.mate_20') == "home"}}
+              sequence:
+                - service: notify.telegram96
+                  data:
+                    message: "Проверь воду в увлажнителе в гостиной"
+            - conditions: >
+                {{states('device_tracker.iphone_lena') == "home"}}
+              sequence:
+                - service: notify.telegramPK
+                  data:
+                    message: "Проверь воду в увлажнителе в гостиной"
+
+    - alias: "switchRadiatorLight" #Переключаем подстветку батареии при нажатии правой кнопки выключателя
+      trigger:
+        platform: state
+        entity_id: switch.0x680ae2fffe71aff5_right
+        to: "on"
+      action:
+        - service: switch.toggle
+          data:
+            entity_id:
+              - switch.0x842e14fffefce063_l2
+        - delay: 0.5
+        - service: switch.turn_off
+          data:
+            entity_id: switch.0x680ae2fffe71aff5_right
+
+    - alias: "solderingIronOn" #Выключение пояльника если меня нет дома
+      trigger:
+        platform: state
+        entity_id: switch.0x842e14fffefce063_l1
+        to: "on"
+        for:
+          seconds: 5
+      condition:
+        - condition: state
+          entity_id: device_tracker.mate_20
+          state: "not_home"
+      action:
+        - service: switch.turn_off
+          data:
+            entity_id: switch.0x842e14fffefce063_l1
+        - delay: 2
+        - service: notify.telegram96
+          data:
+            message: "Кто включил пояльник?"
+
+    - alias: turnOffEverythingHallByLong-holdingLeftInKitchen #Выключение всего в зале по длинному удержанию левой (нижней кнопки)
+      trigger:
+        platform: state
+        entity_id: sensor.0x00158d0004550fa5_click
+        to: "left_long"
+      action:
+        - service: switch.turn_off
+          data:
+            entity_id: switch.0x680ae2fffe71aff5_switch_left
+        - service: switch.turn_off
+          data:
+            entity_id: switch.0x842e14fffefce063_l2
+
+  #
+  climate: #Климат
+    #
+    - platform: generic_thermostat
+      name: "Гостиная"
+      heater: switch.0x842e14fffefce063_l3
+      target_sensor: sensor.hall_main_temperature
+      min_temp: 20
+      max_temp: 27
+      target_temp: 24
+      ac_mode: false
+      min_cycle_duration:
+        seconds: 180
+      initial_hvac_mode: "heat"
+      precision: 0.5
+      cold_tolerance: 0.4
+      hot_tolerance: 0.2
+      keep_alive:
+        minutes: 30

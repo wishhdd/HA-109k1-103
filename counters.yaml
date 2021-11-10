@@ -1,0 +1,384 @@
+counters:
+#
+  automation: # Автоматизации
+#
+  - alias: set_day_tariff
+    trigger:
+      - platform: time
+        at: "06:00:00"
+    action:
+      - service: utility_meter.select_tariff
+        entity_id: 
+          - utility_meter.boiler_month_dn
+          - utility_meter.main_electricity_meter
+          - utility_meter.main_electricity_meter_24
+        data:
+          tariff: day
+
+  - alias: set_night_tariff
+    trigger:
+      - platform: time
+        at: "22:00:00"
+    action:
+      - service: utility_meter.select_tariff
+        entity_id: 
+          - utility_meter.boiler_month_dn
+          - utility_meter.main_electricity_meter
+          - utility_meter.main_electricity_meter_24
+        data:
+          tariff: night
+
+  - alias: sending_values_to_topic
+    trigger:
+      - platform: time
+        at: "23:59:30"
+    action:
+      - service: mqtt.publish
+        data_template:                
+          topic: "energymonitor/day"
+          payload: "{{states('sensor.main_electricity_meter_1') | float}}"
+          retain: true
+      - service: mqtt.publish
+        data_template:                
+          topic: "energymonitor/night"
+          payload: "{{states('sensor.main_electricity_meter_2') | float}}"
+          retain: true
+#
+  sensor: # Сенсоры 
+#
+  - platform: mqtt
+    state_topic: "energymonitor/day"
+    name: consumption_day
+    unit_of_measurement: 'кВт⋅ч'
+
+  - platform: mqtt
+    state_topic: "energymonitor/night"
+    name: consumption_night
+    unit_of_measurement: 'кВт⋅ч'
+
+
+  - platform: template # Напряжение в сети
+    sensors:
+      mains_voltage:
+        friendly_name: "Напряжение сети"
+        value_template: "{{ ((states('sensor.0x588e81fffed97bea_voltage')|float 
+        + states('sensor.0x00158d00044b1aaf_voltage')|float) / 2) |int }}"
+        icon_template: mdi:alpha-v-circle-outline
+        unit_of_measurement: "V"
+
+###### главный счетчик электричества
+
+      main_electricity_meter_consumption: # главный счетчик электричества
+        friendly_name: "Общее потребление"
+        value_template: "{{ state_attr('sensor.0xbc33acfffefe317e_power', 'energy') }}"
+        icon_template: mdi:counter
+        unit_of_measurement: "кВт"
+
+      main_electricity_meter_consumption_day_last_month: # Общее энэргопотребление прошлый месяц день # добавлен
+        friendly_name: "Потребление в день за прошлый месяц"
+        value_template: "{{(state_attr('sensor.main_electricity_meter_day', 'last_period')|float) | round(1)}}"
+        icon_template: mdi:counter
+        unit_of_measurement: "кВт"
+
+      main_electricity_meter_consumption_night_last_month: # Общее энэргопотребление прошлый месяц ночь # добавлен
+        friendly_name: "Потребление в ночь за прошлый месяц"
+        value_template: "{{(state_attr('sensor.main_electricity_meter_night', 'last_period')|float) | round(1)}}"
+        icon_template: mdi:counter
+        unit_of_measurement: "кВт"
+
+      main_electricity_meter_consumption_day_avg: # добавлен
+        friendly_name: "Среднее потребление в день"
+        value_template: "{{(states('sensor.main_electricity_meter_day')|float/now().day)|round(1)}}"
+        icon_template: mdi:counter
+        unit_of_measurement: "кВт"
+
+      main_electricity_meter_consumption_night_avg: # добавлен
+        friendly_name: "Среднее потребление в ночь"
+        value_template: "{{(states('sensor.main_electricity_meter_night')|float/now().day)|round(1)}}"
+        icon_template: mdi:counter
+        unit_of_measurement: "кВт"
+
+      main_electricity_meter_consumption_day_money: # добавлен
+        friendly_name: "Деньги за день"
+        value_template: "{{ (states('sensor.main_electricity_meter_day')|float * 5.78 )|round(2)}}"
+        icon_template: mdi:cash
+        unit_of_measurement: "р"
+      main_electricity_meter_consumption_night_money: # добавлен
+        friendly_name: "Деньги за ночь"
+        value_template: "{{ (states('sensor.main_electricity_meter_night')|float * 3.02 )|round(2)}}"
+        icon_template: mdi:cash
+        unit_of_measurement: "р"
+
+      main_electricity_meter_1: #
+        friendly_name: "На счетчике показания 1"
+        value_template: "{{states('sensor.consumption_day') | float + states('sensor.main_electricity_meter_24_day') | float}}"
+        icon_template: mdi:counter
+        unit_of_measurement: "кВт"
+
+      main_electricity_meter_2: #
+        friendly_name: "На счетчике показания 2"
+        value_template: "{{states('sensor.consumption_night') | float + states('sensor.main_electricity_meter_24_night') | float}}"
+        icon_template: mdi:counter
+        unit_of_measurement: "кВт"
+
+
+###### Посудомойка
+
+      0x588e81fffed97bea_consumption: # Энэргопотребление Посудомойки
+        friendly_name: "Потребление посудомойки"
+        value_template: "{{ state_attr('sensor.0x588e81fffed97bea_power', 'energy') }}"
+        icon_template: mdi:counter
+        unit_of_measurement: "кВт"
+
+      0x588e81fffed97bea_consumption_last_month: # Энэргопотребление Посудомойки за прошлый месяц
+        friendly_name: "Потребление посудомойки за прошлый месяц"
+        value_template: "{{(state_attr('sensor.0x588e81fffed97bea_month', 'last_period')|float) | round(1)}}"
+        icon_template: mdi:counter
+        unit_of_measurement: "кВт"
+
+      0x588e81fffed97bea_consumption_avg: # Энэргопотребление Посудомойки среднее
+        friendly_name: "Среднее посудомойки морозилки"
+        value_template: "{{ (states('sensor.0x588e81fffed97bea_month')|float/now().day)|round(3)}}"
+        icon_template: mdi:counter
+        unit_of_measurement: "кВт"
+
+      dishwasher_condition:
+        friendly_name: "Состояние посудомойки"
+        value_template: >
+          {%if is_state('switch.0x588e81fffed97bea', 'off') %}
+            power_off
+          {% elif state_attr('switch.0x588e81fffed97bea', 'power')|float < 10 %}
+            standby
+          {% elif state_attr('switch.0x588e81fffed97bea', 'power')|float > 10 %}
+            work
+          {% else %}
+            failed
+          {% endif %}
+        icon_template: >
+          {% if is_state("sensor.dishwasher_condition", "power_off") %}
+            mdi:power-plug-off
+          {% elif is_state("sensor.dishwasher_condition", "standby") %}
+            mdi:dishwasher-off
+          {% elif is_state("sensor.dishwasher_condition", "work") %}
+            mdi:dishwasher
+          {% else %}
+            mdi:dishwasher-alert
+          {% endif %}
+
+###### Морозильник
+
+      0x842e14fffe3668ab_consumption: # Энэргопотребление морозилка
+        friendly_name: "Потребление морозилки"
+        value_template: "{{ state_attr('sensor.loggiaplug01_power', 'energy') }}"
+        icon_template: mdi:counter
+        unit_of_measurement: "кВт"
+
+      0x842e14fffe3668ab_consumption_last_month: # Энэргопотребление морозилка за прошлый месяц
+        friendly_name: "Потребление морозилки за прошлый месяц"
+        value_template: "{{(state_attr('sensor.0x842e14fffe3668ab_month', 'last_period')|float) | round(1)}}"
+        icon_template: mdi:counter
+        unit_of_measurement: "кВт"
+
+      0x842e14fffe3668ab_consumption_avg: # Энэргопотребление морозилка среднее
+        friendly_name: "Среднее потребление морозилки"
+        value_template: "{{ (states('sensor.0x842e14fffe3668ab_month')|float/now().day)|round(3)}}"
+        icon_template: mdi:counter
+        unit_of_measurement: "кВт"
+
+      fridge_condition:
+        friendly_name: "Состояние Морозилки"
+        value_template: >
+          {%if is_state('switch.loggiaplug01', 'off') %}
+            power_off
+          {% elif state_attr('switch.loggiaplug01', 'power')|float < 10 %}
+            standby
+          {% elif state_attr('switch.loggiaplug01', 'power')|float > 10 %}
+            work
+          {% else %}
+            failed
+          {% endif %}
+        icon_template: >
+          {% if is_state("sensor.fridge_condition", "power_off") %}
+            mdi:power-plug-off
+          {% elif is_state("sensor.fridge_condition", "standby") %}
+            mdi:fridge-industrial-off-outline
+          {% elif is_state("sensor.fridge_condition", "work") %}
+            mdi:fridge-industrial-outline
+          {% else %}
+            mdi:fridge-industrial-alert-outline
+          {% endif %}
+
+###### Бойлера
+
+      boiler_consumption: # Энэргопотребление бойлера
+        friendly_name: "Потребление бойлера"
+        value_template: "{{ state_attr('sensor.0x60a423fffead7948_power', 'energy') }}"
+        icon_template: mdi:counter
+        unit_of_measurement: "кВт"
+
+      boiler_consumption_last_month: # Энэргопотребление бойлера за прошлый месяц
+        friendly_name: "Потребление бойлера за прошлый месяц"
+        value_template: "{{(state_attr('sensor.boiler_month', 'last_period')|float) | round(1)}}"
+        icon_template: mdi:counter
+        unit_of_measurement: "кВт"
+
+      boiler_consumption_avg: #
+        friendly_name: "Среднее потребление бойлера"
+        value_template: "{{ (states('sensor.boiler_month')|float/now().day)|round(3)}}"
+        icon_template: mdi:counter
+        unit_of_measurement: "кВт"
+###
+      boiler_d_consumption_last_month: # Энэргопотребление бойлера за прошлый месяц день
+        friendly_name: "Потребление в день бойлера за прошлый месяц"
+        value_template: "{{(state_attr('sensor.boiler_month_dn_day', 'last_period')|float) | round(1)}}"
+        icon_template: mdi:counter
+        unit_of_measurement: "кВт"
+
+      boiler_n_consumption_last_month: # Энэргопотребление бойлера за прошлый месяц день
+        friendly_name: "Потребление в день бойлера за прошлый месяц"
+        value_template: "{{(state_attr('sensor.boiler_month_dn_night', 'last_period')|float) | round(1)}}"
+        icon_template: mdi:counter
+        unit_of_measurement: "кВт"
+#####  расзбивка по траифам
+      boiler_d_money: # 
+        friendly_name: "Деньги за день"
+        value_template: "{{ (states('sensor.boiler_month_dn_day')|float * 5.78 )|round(2)}}"
+        icon_template: mdi:cash
+        unit_of_measurement: "р"
+      boiler_n_money: # 
+        friendly_name: "Деньги за ночь"
+        value_template: "{{ (states('sensor.boiler_month_dn_night')|float * 3.02 )|round(2)}}"
+        icon_template: mdi:cash
+        unit_of_measurement: "р"
+
+      boiler_all_money: # 
+        friendly_name: "Деньги в сумме"
+        value_template: "{{ (states('sensor.boiler_d_money')|float + states('sensor.boiler_n_money')|float )|round(2)}}"
+        icon_template: mdi:cash-multiple
+        unit_of_measurement: "р"
+
+      boiler_all_money_last_month: # 
+        friendly_name: "Деньги в сумме за прошлый месяц"
+        value_template: "{{ ((state_attr('sensor.boiler_month_dn_day', 'last_period')|float * 5.78) + (state_attr('sensor.boiler_month_dn_night', 'last_period')|float  * 3.02 ))|round(2)}}"
+        icon_template: mdi:cash-multiple
+        unit_of_measurement: "р"
+
+      boiler_condition:
+        friendly_name: "Состояние бойлера"
+        value_template: >
+          {%if is_state('switch.0x60a423fffead7948', 'off') %}
+            power_off
+          {% elif state_attr('switch.0x60a423fffead7948', 'power')|float < 10 %}
+            standby
+          {% elif state_attr('switch.0x60a423fffead7948', 'power')|float > 10 %}
+            work
+          {% else %}
+            failed
+          {% endif %}
+        icon_template: >
+          {% if is_state("sensor.boiler_condition", "power_off") %}
+            mdi:power-plug-off
+          {% elif is_state("sensor.boiler_condition", "standby") %}
+            mdi:water-boiler-off
+          {% elif is_state("sensor.boiler_condition", "work") %}
+            mdi:water-boiler
+          {% else %}
+            mdi:water-boiler-alert
+          {% endif %}
+
+###### Кондиционер в спальне
+
+      bedroom_air_conditioning_cons: # Энэргопотребление кондиционера в спальне
+        friendly_name: "Потребление кондиционера в спальне"
+        value_template: "{{ state_attr('sensor.0x60a423fffef8dc96_power', 'energy') }}"
+        icon_template: mdi:counter
+        unit_of_measurement: "кВт"
+
+      bedroom_air_conditioning_consumption_last_month: # Энэргопотребление кондиционера в спальне за прошлый месяц
+        friendly_name: "Потребление кондиционера в спальне за прошлый месяц"
+        value_template: "{{(state_attr('sensor.bedroom_air_conditioning_m', 'last_period')|float) | round(1)}}"
+        icon_template: mdi:counter
+        unit_of_measurement: "кВт"
+
+      bedroom_air_conditioning_consumption_avg: # Среднее потребление кондиционера в спальне за прошлый месяц
+        friendly_name: "Среднее потребление кондиционера в спальне"
+        value_template: "{{ (states('sensor.bedroom_air_conditioning_m')|float/now().day)|round(3)}}"
+        icon_template: mdi:counter
+        unit_of_measurement: "кВт"
+
+      bedroom_air_conditioning_condition:
+        friendly_name: "Состояние бойлера"
+        value_template: >
+          {%if is_state('switch.0x60a423fffef8dc96', 'off') %}
+            power_off
+          {% elif state_attr('switch.0x60a423fffef8dc96', 'power')|float < 10 %}
+            standby
+          {% elif state_attr('switch.0x60a423fffef8dc96', 'power')|float > 10 %}
+            work
+          {% else %}
+            failed
+          {% endif %}
+        icon_template: >
+          {% if is_state("sensor.bedroom_air_conditioning_condition", "power_off") %}
+            mdi:power-plug-off
+          {% elif is_state("sensor.bedroom_air_conditioning_condition", "standby") %}
+            mdi:hvac-off
+          {% elif is_state("sensor.bedroom_air_conditioning_condition", "work") %}
+            mdi:hvac
+          {% else %}
+            mdi:fan-alert
+          {% endif %}
+###
+
+#      total_monthly_consumption: #Сумарное энергопотребление за текущей месяц
+#        friendly_name: "Потребление за месяц"
+#        value_template: "{{ (states('sensor.0x588e81fffed97bea_month')|float 
+#        + states('sensor.0x842e14fffe3668ab_month')|float) | round(1) }}"
+#        icon_template: mdi:counter
+#        unit_of_measurement: "кВт"
+
+#      total_consumption_last_month:
+#        friendly_name: "Потребление за прошый месяц"
+#        value_template: "{{ (state_attr('sensor.0x588e81fffed97bea_month', 'last_period')|float 
+#        + state_attr('sensor.0x842e14fffe3668ab_month', 'last_period')|float) | round(1) }}"
+#        icon_template: mdi:counter
+#        unit_of_measurement: "кВт"
+
+  ### Электросчетчики
+  utility_meter:
+    # в месяц
+    0x588e81fffed97bea_month:
+      source: sensor.0x588e81fffed97bea_consumption
+      cycle: monthly
+    0x842e14fffe3668ab_month:
+      source: sensor.0x842e14fffe3668ab_consumption
+      cycle: monthly
+
+    boiler_month:
+      source: sensor.boiler_consumption
+      cycle: monthly
+
+    boiler_month_dn:
+      source: sensor.boiler_consumption
+      cycle: monthly
+      tariffs:
+        - day
+        - night
+
+    bedroom_air_conditioning_m:
+      source: sensor.bedroom_air_conditioning_cons
+      cycle: monthly
+
+    main_electricity_meter:
+      source: sensor.main_electricity_meter_consumption
+      cycle: monthly
+      tariffs:
+        - day
+        - night
+
+    main_electricity_meter_24:
+      source: sensor.main_electricity_meter_consumption
+      cycle: daily
+      tariffs:
+        - day
+        - night

@@ -1,0 +1,225 @@
+kitchen:
+
+  ##############
+  timer:
+    ##############
+    move_led:
+      duration: "00:05:00"
+##############
+  sensor: #Сенсторы
+##############
+    # Необходимая влажность в ванной
+    - platform: template
+      sensors:
+        kitchen_loggia_avg_temperature:
+          friendly_name: "Средняя температура кухни и лоджии"
+          unit_of_measurement: "°C"
+          icon_template: mdi:thermometer
+          value_template: >-
+            {{((states('sensor.0x00158d0004189010_temperature')|float+ states('sensor.0x00158d000418243c_temperature')|float)/2)|round(1)}}
+##############
+  automation: #Автоматизации
+##############
+
+    - alias: "windowsillLightByMovement" # 
+      trigger:
+        platform: state
+        entity_id: 
+              - binary_sensor.0xbc33acfffe500c22_occupancy
+              - binary_sensor.0x00158d0003cf2082_occupancy
+        to: "on"
+      condition:
+        condition: and
+        conditions:
+          - condition: state
+            entity_id: sun.sun
+            state: "below_horizon"
+          - condition: state
+            entity_id: 
+              - switch.0x00158d00044b1aaf_l1 # Подсветка линия 1
+              - switch.0x00158d00044b1aaf_l2 # Подсветка линия 2
+              - switch.0x60a423fffeaae3a6_left # выключатель на лоджии
+              - switch.0x60a423fffeaae3a6_center # выключатель на лоджии
+              - switch.0x60a423fffeaae3a6_right # выключатель на лоджии
+            state: "off"
+      action:
+        - service: light.turn_on
+          data:
+            entity_id: light.wled # Подсветка подоконика
+        - service: timer.start
+          target:
+            entity_id: timer.move_led
+
+    - alias: "turning_off_led_by_timer"
+      trigger:
+        - platform: event
+          event_type: timer.finished
+          event_data:
+            entity_id: timer.move_led
+      action:
+        - service: light.turn_off
+          data:
+            entity_id: light.wled # Подсветка подоконика
+
+
+    - alias: "switchLightFromBelow" #Один клик переключает нижний свет
+      trigger:
+        platform: state
+        entity_id: sensor.0x04cf8cdf3c7d3825_action
+        to: "button_3_single"
+      action:
+        - service: switch.toggle
+          data:
+            entity_id: switch.0x00158d00044b1aaf_l1
+
+    - alias: "switchLightFromOverhead " #Один клик переключает свет верх
+      trigger:
+        platform: state
+        entity_id: sensor.0x04cf8cdf3c7d3825_action
+        to: "button_1_single"
+      action:
+        - service: switch.toggle
+          data:
+            entity_id: switch.0x00158d00044b1aaf_l2
+
+    - alias: "lightCeilingCenter" #Один клик переключает свет центр
+      trigger:
+        platform: state
+        entity_id: sensor.0x04cf8cdf3c7d3825_action
+        to: "button_2_single"
+      action:
+        - service: script.light_kitchen_ch1
+
+    - alias: "lightSwitchB2H"
+      trigger:
+        platform: state
+        entity_id: sensor.0x04cf8cdf3c7d3825_action
+        to: "button_2_hold"
+      action:
+        - service: switch.turn_off
+          target:
+            entity_id: 
+              - switch.0x680ae2fffe71aff5_left  # люстра
+              - switch.0x842e14fffefce063_l2  # Подсвтека батареи
+
+    - alias: "lightSwitchB4H"
+      trigger:
+        platform: state
+        entity_id: sensor.0x04cf8cdf3c7d3825_action
+        to: "button_4_hold"
+      action:
+        - service: switch.turn_off
+          data:
+            entity_id: 
+              - switch.0xec1bbdfffe6c143e_right  # свет в ванной
+
+    - alias: "lightCeilingLeftRight"
+      trigger:
+        platform: state
+        entity_id: sensor.0x04cf8cdf3c7d3825_action
+        to: "button_6_single"
+      action:
+        - service: script.light_kitchen_ch2
+
+    - alias: "lightCeilingFrontBack"
+      trigger:
+        platform: state
+        entity_id: sensor.0x04cf8cdf3c7d3825_action
+        to: "button_4_single"
+      action:
+        - service: script.light_kitchen_ch3
+
+    - alias: "lightLoggia1"
+      trigger:
+        platform: state
+        entity_id: sensor.0x04cf8cdf3c7d3825_action
+        to: "button_5_single"
+      action:
+        - service: switch.toggle
+          data:
+            entity_id: switch.0x60a423fffeaae3a6_left # выключтель на лоджии
+
+    - alias: "lightLoggia2"
+      trigger:
+        platform: state
+        entity_id: sensor.0x04cf8cdf3c7d3825_action
+        to: "button_5_double"
+      action:
+        - service: switch.toggle
+          data:
+            entity_id: switch.0x60a423fffeaae3a6_center # выключтель на лоджии
+
+    - alias: "lightLoggiaAll"
+      trigger:
+        platform: state
+        entity_id: sensor.0x04cf8cdf3c7d3825_action
+        to: "button_5_triple"
+      action:
+        - service: switch.turn_on
+          target:
+            entity_id:
+              - switch.0x60a423fffeaae3a6_left 
+              - switch.0x60a423fffeaae3a6_center # выключтель на лоджии
+
+    - alias: "lightLoggiaAllOff"
+      trigger:
+        platform: state
+        entity_id: sensor.0x04cf8cdf3c7d3825_action
+        to: "button_5_hold"
+      action:
+        - service: switch.turn_off
+          target:
+            entity_id:
+              - switch.0x60a423fffeaae3a6_left 
+              - switch.0x60a423fffeaae3a6_center # выключтель на лоджии
+              - switch.0x60a423fffeaae3a6_right
+        - service: light.turn_off
+          target:
+            entity_id:
+              - light.wled
+
+    #Предупреждение про радиофон
+    - alias: "radiationBackground_25"
+      trigger:
+        - platform: numeric_state
+          entity_id: sensor.0x00124b001ed11c18_radiation_dose_per_hour
+          above: 25
+          for:
+            minutes: 5
+      action:
+        service: notify.telegram
+        data_template:
+          title: "☢☢☢"
+          message: "Радиоционный фон привысил отметку 25 мР в час и составляет {{ states('sensor.0x00124b001ed11c18_radiation_dose_per_hour')|float }} мР в час ."
+
+    - alias: "radiationBackground_50"
+      trigger:
+        - platform: numeric_state
+          entity_id: sensor.0x00124b001ed11c18_radiation_dose_per_hour
+          above: 50
+          for:
+            minutes: 5
+      action:
+        service: notify.telegram
+        data_template:
+          title: "❗❗❗☢☢☢❗❗❗"
+          message: "Радиоционный фон привысил отметку 50 мР в час  и составляет {{ states('sensor.0x00124b001ed11c18_radiation_dose_per_hour')|float }} мР в час ."
+#
+  climate: #Климат
+    #
+    - platform: generic_thermostat
+      name: "Кухня"
+      heater: switch.0x847127fffe12cde6 # KitchenSwitchThermostat
+      target_sensor: sensor.kitchen_loggia_avg_temperature
+      min_temp: 18
+      max_temp: 27
+      target_temp: 24
+      ac_mode: false
+      min_cycle_duration:
+        seconds: 180
+      initial_hvac_mode: "heat"
+      precision: 0.5
+      cold_tolerance: 0.4
+      hot_tolerance: 0.2
+      keep_alive:
+        minutes: 30

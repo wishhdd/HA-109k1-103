@@ -1,0 +1,99 @@
+otpusk:
+##############
+  automation: #Автоматизации
+##############
+
+    - alias: "cvet_c_utra_on"
+      trigger:
+        - platform: time
+          at: "6:00:00"
+      action:
+        - service: switch.turn_on
+          data:
+            entity_id:
+              - switch.0x680ae2fffe71aff5_left #Большой свет в зале
+        - delay: 2
+        - service: switch.turn_on
+          data:
+            entity_id:
+              - switch.0x00158d00044b1aaf_l1 #Кухня подсвтека верх
+
+    - alias: "cvet_c_utra_off"
+      trigger:
+        - platform: time
+          at: "6:15:00"
+      action:
+        - service: switch.turn_off
+          data:
+            entity_id:
+              - switch.0x680ae2fffe71aff5_left #Большой свет в зале
+        - delay: 2
+        - service: switch.turn_off
+          data:
+            entity_id:
+              - switch.0x00158d00044b1aaf_l1 #Кухня подсвтека верх
+
+    - alias: "cvet_vecherom_on1"
+      trigger:
+        - platform: sun
+          event: sunset
+      action:
+        - service: switch.turn_on
+          data:
+            entity_id:
+              - switch.0x680ae2fffe71aff5_left #Большой свет в зале
+        - delay: 2
+        - service: switch.turn_on
+          data:
+            entity_id:
+              - switch.0x00158d00044b1aaf_l1 #Кухня подсвтека верх
+        - delay: 2
+        - service: switch.turn_on
+          data:
+            entity_id:
+              - switch.0x00158d00044b1aaf_l2 #Кухня подсвтека низ
+
+    - alias: "cvet_vecherom_on2"
+      trigger:
+        - platform: time
+          at: "21:57:00"
+      action:
+        - service: switch.turn_off
+          data:
+            entity_id:
+              - switch.0x680ae2fffe71aff5_left #Большой свет в зале
+        - delay: 2
+        - service: switch.turn_on
+          data:
+            entity_id:
+              - switch.0x842e14fffefce063_l2 #За подсветка батареи
+        - delay: 2
+        - service: switch.turn_off
+          data:
+            entity_id:
+              - switch.0x00158d00044b1aaf_l2 #Кухня подсвтека низ
+
+    - alias: "cvet_vecherom_off"
+      trigger:
+        - platform: time
+          at: "23:07:00"
+      action:
+        - service: switch.turn_off
+          data:
+            entity_id:
+              - switch.0x680ae2fffe71aff5_left #Большой свет в зале
+        - delay: 2
+        - service: switch.turn_off
+          data:
+            entity_id:
+              - switch.0x842e14fffefce063_l2 #За подсветка батареи
+        - delay: 2
+        - service: switch.turn_off
+          data:
+            entity_id:
+              - switch.0x00158d00044b1aaf_l2 #Кухня подсвтека низ
+        - delay: 2
+        - service: switch.turn_off
+          data:
+            entity_id:
+              - switch.0x00158d00044b1aaf_l1 #Кухня подсвтека верх

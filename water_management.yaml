@@ -1,0 +1,98 @@
+water_management:
+  #
+  #
+  automation: #Автоматизации
+    #
+
+    - alias: "openingWater" # Открываем воду
+      trigger:
+        platform: state
+        entity_id: switch.0xec1bbdfffe0e4df8_left
+        to: "on"
+        for:
+          seconds: 25
+      action:
+        - service: switch.turn_off
+          data:
+            entity_id: switch.0xec1bbdfffe0e4df8_left
+        - service: notify.telegram
+          data_template:
+            title: "Вода"
+            message: "Открыта"
+
+    - alias: "leftAndCenter" # Переключаем клавиши
+      trigger:
+        platform: state
+        entity_id: switch.0xec1bbdfffe0e4df8_left
+        to: "on"
+      action:
+        - service: switch.turn_off
+          data:
+            entity_id: switch.0xec1bbdfffe0e4df8_center
+
+    - alias: "closingWater" # Выключаем воду
+      trigger:
+        platform: state
+        entity_id: switch.0xec1bbdfffe0e4df8_center
+        to: "on"
+        for:
+          seconds: 25
+      action:
+        - service: switch.turn_off
+          data:
+            entity_id: switch.0xec1bbdfffe0e4df8_center
+        - service: notify.telegram
+          data_template:
+            title: "Вода"
+            message: "Закрыта"
+
+    - alias: "CenterAndLeft" # Переключаем клавиши
+      trigger:
+        platform: state
+        entity_id: switch.0xec1bbdfffe0e4df8_center
+        to: "on"
+      action:
+        - service: switch.turn_off
+          data:
+            entity_id: switch.0xec1bbdfffe0e4df8_left
+
+            # Выключаем воду при протечки
+    - alias: "turnOffWater"
+      trigger:
+        platform: state
+        entity_id:
+          - binary_sensor.0x00158d0006518648_water_leak #Датчик под фильтром на кухне
+          - binary_sensor.0x00158d000460061c_water_leak #Датчик в ваной
+          - binary_sensor.0x00158d00042b1d7b_water_leak #Датчик в туалете
+          - binary_sensor.0x00158d00046048cc_water_leak #Датчик на кухне
+        to: "on"
+        for:
+          seconds: 4
+      action:
+        - service: notify.telegram
+          data_template:
+            message: "Перекрываю воду"
+        - service: switch.turn_on
+          data:
+            entity_id: switch.0xec1bbdfffe0e4df8_center
+        - service: switch.turn_on
+          data:
+            entity_id: switch.0x842e14fffe11c2e8
+
+    - alias: "heating_battery_leaking" # Батарея отопления потекла
+      trigger:
+        platform: state
+        entity_id:
+          - binary_sensor.0x00158d0001122c76_water_leak
+          - binary_sensor.0x00158d000112ff0d_water_leak
+          - binary_sensor.0x00158d000112ffb4_water_leak # датчик в зале
+        to: "on"
+        for:
+          seconds: 2
+      action:
+        - service: notify.telegram
+          data_template:
+            message: "Батарея потекла"
+        - service: switch.turn_on
+          data:
+            entity_id: switch.0x842e14fffe11c2e8 # звоним в звонок

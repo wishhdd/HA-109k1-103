@@ -1,0 +1,127 @@
+report:
+  #
+  automation: #Автоматизации
+    #
+    - alias: "bathroomIsOnFire" #Высокая температура в ванной
+      trigger:
+        - above: "40"
+          platform: numeric_state
+          entity_id: sensor.0x00158d0003cc5589_temperature
+          for:
+            minutes: 1
+      action:
+        service: notify.telegram
+        data_template:
+          title: "Горим?"
+          message: "Температура в ванной больше 40!!!"
+
+    - alias: sendClimateReport #послать оповещение о погоде
+      trigger:
+        - platform: time
+          at: "07:15:00"
+      action:
+        - service: script.turn_on
+          entity_id:
+            - script.weather_report
+
+    - alias: smokeInKitchen #Дым на кухне
+      trigger:
+        platform: state
+        entity_id: binary_sensor.0x5c0272fffebc1892_smoke
+        to: "on"
+      action:
+        service: notify.telegram
+        data_template:
+          title: "Горим? Откуда дым!!!"
+          message: "Датчик дыма!, Горим!!!"
+
+    - alias: "kitchenIsOnFire" #Высокая температура на кухне
+      trigger:
+        - above: "40"
+          platform: numeric_state
+          entity_id: sensor.0x00158d0004189010_temperature
+          for:
+            minutes: 1
+      action:
+        service: notify.telegram
+        data_template:
+          title: "Горим?"
+          message: "Температура в кухне больше 40!!!"
+
+    ###Охрана
+    - alias: ДРС #  Срабатывание датчик размыкания в сейфе
+      trigger:
+        platform: state
+        entity_id: binary_sensor.0x00158d0003031d8c_contact
+        to: "on"
+      condition:
+        - condition: state
+          entity_id: group.Core
+          state: "not_home"
+      action:
+        - delay: 30
+        - choose:
+            - conditions: >
+                {{states('group.Core') == "not_home"}}
+              sequence:
+                - service: notify.telegram
+                  data_template:
+                    title: "Охрана"
+                    message: "Кто открыл сейф, если ни кого нет дома???"
+    #
+    - alias: ДДГ #  Срабатывание датчик движение в гардеробе
+      trigger:
+        platform: state
+        for:
+          seconds: 30
+        entity_id: binary_sensor.0x00158d00045e1c80_occupancy
+        to: "on"
+      condition:
+        - condition: state
+          entity_id: group.Core
+          state: "not_home"
+      action:
+        - delay: 120
+        - choose:
+            - conditions: >
+                {{states('group.Core') == "not_home"}}
+              sequence:
+                - service: notify.telegram
+                  data_template:
+                    message: "Почему сработал датчик движения, если ни кого нет дома???"
+    #
+    - alias: T110 #  Датчик двери
+      trigger:
+        - platform: state
+          entity_id: binary_sensor.0x00158d0003973c2d_contact
+          to: "on"
+      condition:
+        - condition: state
+          entity_id: group.Core
+          state: "not_home"
+      action:
+        - delay: 90
+        - choose:
+            - conditions: >
+                {{states('group.Core') == "not_home"}}
+              sequence:
+                - service: notify.telegram
+                  data_template:
+                    message: "Кто то стучиться в нашу дверь."
+
+  #
+  script:
+    #
+    weather_report:
+      sequence:
+        - service: notify.telegram
+          data:
+            message: |
+              За окном {{states('sensor.openweathermap_weather')}}.
+              🌡 {{states('sensor.0x00158d0006794cbe_temperature')}}°C, 🌬 {{states('sensor.openweathermap_wind_speed')}}м/с.
+              Прогноз на сегодня:
+              🌡 {{states('sensor.openweathermap_forecast_temperature')}}°C, 🌬 {{states('sensor.openweathermap_forecast_wind_speed')}}м/с.
+              {%- if states('sensor.openweathermap_rain')>'0'%}
+              Вероятность {{"\U0001F327"}} {{ states('sensor.openweathermap_rain')|float*100}}%{% endif %}
+              {%- if states('sensor.openweathermap_snow')>'0' %}
+              Прогноз {{"❄"}} {{ states('sensor.openweathermap_snow')|float*100}}%{% endif %}

@@ -1,0 +1,95 @@
+telegram_bot:
+  script:
+    svet_mig_mig:
+      alias: Мигаем светом
+      sequence:
+        - service: switch.toggle
+          data:
+            entity_id: switch.0x842e14fffefce063_l2
+        - delay:
+            milliseconds: 500
+        - service: switch.toggle
+          data:
+            entity_id: switch.0x680ae2fffe71aff5_left
+        - delay:
+            milliseconds: 500
+        - service: switch.toggle
+          data:
+            entity_id: switch.0xec1bbdfffe6c143e_left
+        - delay:
+            milliseconds: 500
+        - service: switch.toggle
+          data:
+            entity_id: switch.0xec1bbdfffe6c143e_right
+        - delay:
+            milliseconds: 500
+          #        - service: switch.toggle
+          #          data:
+          #            entity_id: switch.0xec1bbdfffe66e590
+          #        - delay:
+          #            milliseconds: 500
+          #        - service: switch.toggle
+          #data:
+          #  entity_id: switch.0x00158d00044b1aaf_l1
+        - delay:
+            milliseconds: 500
+        - service: switch.toggle
+          data:
+            entity_id: switch.0x00158d00044b1aaf_l2
+        - delay:
+            milliseconds: 500
+        - service: switch.toggle
+          data:
+            entity_id: switch.0xec1bbdfffe0e4df8_right
+
+  automation:
+    - id: Клавиатура телеграмм бота
+      alias: telegram_keyboard_start
+      initial_state: true
+      trigger:
+        - platform: event
+          event_type: telegram_command
+          event_data:
+            command: "/start"
+      action:
+        - service: telegram_bot.send_message
+          data_template:
+            target: '{{ trigger.event.data.user_id }}'
+            message: "Меню загружено"
+            data:
+              keyboard:
+                - "/menu"
+
+    - alias: telegram_keyboard
+      initial_state: true
+      trigger:
+        - platform: event
+          event_type: telegram_command
+          event_data:
+            command: "/menu"
+      action:
+        - service: telegram_bot.send_message
+          data:
+            target: '{{ trigger.event.data.user_id }}'
+            message: "Что хотите сделать?"
+            inline_keyboard:
+              - 'Помигать светом:/svet_mig'
+
+    - alias: svet_mig
+      initial_state: true
+      trigger:
+        - platform: event
+          event_type: telegram_callback
+          event_data:
+            command: "/svet_mig"
+      action:
+        - service: script.svet_mig_mig
+        - delay:
+            milliseconds: 500
+        - service: script.svet_mig_mig
+        - delay:
+            milliseconds: 100
+        - service: telegram_bot.send_message
+          data:
+            target: '{{ trigger.event.data.user_id }}'
+            message: "Светом помигал"

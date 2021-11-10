@@ -1,0 +1,156 @@
+broad_link:
+  script:
+    learn_broadlink:
+      sequence:
+        - service: remote.learn_command
+          target:
+            entity_id: remote.broadlink_remote
+          data:
+            device: conditioner
+            command: cond_on_24_fun_low
+            command_type: ir
+
+    learn_rm4cm01:
+      sequence:
+        - service: remote.learn_command
+          target:
+            entity_id: remote.rm4cm01_remote
+          data:
+            device: conditioner
+            command_type: ir
+            command: 
+              - cold_low_16
+              - cold_low_17
+              - cold_low_18
+              - cold_low_19
+
+
+    delete_all_broadlink:
+      sequence:
+        - service: remote.delete_command
+          target:
+            entity_id: remote.broadlink_remote
+          data:
+            device: conditioner
+            command:
+              - cond_on_24_fun_low
+
+    delete_all_rm4cm01:
+      sequence:
+        - service: remote.delete_command
+          target:
+            entity_id: remote.rm4cm01_remote
+          data:
+            device: conditioner
+            command:
+              - cold_low_16
+              - cold_low_17
+              - cold_low_18
+              - cold_low_19
+              - cold_low_20
+              - cold_low_21
+              - cold_low_22
+              - cold_low_23
+              - cold_low_24
+              - cold_low_25
+              - cold_low_26
+              - cold_low_27
+              - cold_low_28
+              - cold_low_29
+              - cold_low_30
+
+    ir_test:
+      sequence:
+        - service: remote.send_command
+          target:
+            entity_id: remote.rm4cm01_remote
+          data:
+            command: b64:JgBoAWFjYpMRNxITETcSExISETgRNxITEhISExITERMSExISETgSEhITEhMSEhITEhISExMSEhMRExITEhISExITERMSExISEhMRNxITEhMSEhITEhISExITETcRNxITEhMSEhITEhITEhITEhISExITEhISExITEhISExE3EhMSEhITEhMSEhITEhMSEhITEhISExITEhISExITEhISExISEhMSExISEhMSExISEhMSFg8SEhMSEhITEhMSEhITEhMSEhITEhMSEhITEhISExITEhISExE3EhMRNxE4EhIRNxITEhMRNxE3EhMRNxE4EhIRNxI3ETcSExISEhMSExISEhMSEhITETcSNxISEhMSExISEhMSExISEhMSEhITEhMSEhITEhMSEhITEhISExITEhISExITEhISExISEhMSExISEhMSExETEhMSEhITEhMSEhITEhMRExE3EjcRNxITETcRNxE3EgANBQ==
+
+    light_kitchen_ch1:
+      sequence:
+        - service: remote.send_command
+          target:
+            entity_id: remote.broadlink_remote
+          data:
+            command: b64:gwsyABkIGQgZCBkIGQgZCAkYCRgJGAkYCfcZCBkIGQgZCAkXCRgZCBoIChgZCAoYGQgJGBkIAAAAAAAA==
+
+    light_kitchen_ch2:
+      sequence:
+        - service: remote.send_command
+          target:
+            entity_id: remote.broadlink_remote
+          data:
+            command: b64:gwYyAAkYGQgZCAkYGQgJGRkICRkZCRkIGQgJGAkYGQgZCAkYCRgJGAkYCfgZCBkJGQgZCAkYAAAAAAAA==
+
+    light_kitchen_ch3:
+      sequence:
+        - service: remote.send_command
+          target:
+            entity_id: remote.broadlink_remote
+          data:
+            command: b64:hAcyABkICRgZCBkJGQgZCBkICRgJGAkYCRgJGAkYCfcZCBkIGQgZCAkYCRgZCBkICRgZCAkYAAAAAAAA==
+
+    light_kitchen_ch4:
+      sequence:
+        - service: remote.send_command
+          target:
+            entity_id: remote.broadlink_remote
+          data:
+            command: b64:gwoyAAkYGQkZCAkZGQkJGBoJCRkZCBkIGQgJGQkZCRgJGBkIGQkJGAkYCfoaCBkJGQgZCQkZAAAAAAAA==
+
+    light_kitchen_ch_all:
+      sequence:
+        - service: remote.send_command
+          target:
+            entity_id: remote.broadlink_remote
+          data:
+            command: b64:gwYyABkICRgZCQkZGQgaCBkJCRgJGAkYCRkJGQkZGQkZCAn6GQkZCRkIGggJGQkZGQkZCAkYAAAAAAAA==
+
+    light_bedroom_ch_1:
+      sequence:
+        - service: remote.send_command
+          target:
+            entity_id: remote.broadlink_remote
+          data:
+            command: b64:ewgyABkICRcZCAkXCRcJFxkHGQcZBwoXCRcJFwkXCRcJFwnvGQcZBwkXCRcJFwkXCRcZBxkIAAAAAAAA
+
+    light_bedroom_ch_2:
+      sequence:
+        - service: remote.send_command
+          target:
+            entity_id: remote.broadlink_remote
+          data:
+            command: b64:egcyAAoXGQgJFwkXGQcZBwoXChcJFwkXCe8ZBxkIChcJFwkXCRcJFxkIGQgZBwkXGQcJFwkXAAAAAAAA
+
+    light_bedroom_ch_3:
+      sequence:
+        - service: remote.send_command
+          target:
+            entity_id: remote.broadlink_remote
+          data:
+            command: b64:eQcyABkIGQcKFwkXCRcJFwkXGQgZBxkICRcZCAkXCRcJFxkICRcJFwkXCRcZCBkICRcJFwnvAAAAAAAA
+
+    light_bedroom_ch_all:
+      sequence:
+        - service: remote.send_command
+          target:
+            entity_id: remote.broadlink_remote
+          data:
+            command: b64:eQ8yAAkXCRcZBxkHCe8ZCBkICRcJFwkXCRcJFxkHGQcZBwkXGQcJFwkXCRcZCAkXCRcJFwkXAAAAAAAA
+
+    cond_bedroom_24_fl: # Включаем кондиционер на охлаждение 24 градуса минимальная скорость
+      sequence:
+        - service: remote.send_command
+          target:
+            entity_id: remote.broadlink_remote
+          data:
+            command: b64:JgBAAGoAAUMTMxEREhARERIyEhASERERERESEBIQEhASEBIQEhERERA0EhERERIzERERERIQEhASMhIRERESMhEADQUAAAAAAAAAAA==
+
+    cond_bedroom_off: # Выключаем кондиционер
+      sequence:
+        - service: remote.send_command
+          target:
+            entity_id: remote.broadlink_remote
+          data:
+            command: b64:JgBAAGoAAUQSMhIRERESEBIzERERERIRETMRMxIQEhERERIRERERERIQEhASEBIQEhERMxIQEjISERERERESMhIADQUAAAAAAAAAAA==

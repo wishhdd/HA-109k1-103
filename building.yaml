@@ -1,0 +1,71 @@
+#
+building:
+#
+
+##############
+  automation:
+##############
+
+    - alias: "door_hall_open"
+      trigger:
+        platform: state
+        entity_id: binary_sensor.0x00158d000398835a_contact
+        to: "on"
+        for:
+          seconds: 1
+      condition:
+          - condition: state
+            entity_id: group.core
+            state: "home"
+      action:
+        - service: notify.telegram
+          data:
+            message: "Кто открыл дверь в зал?"
+
+    - alias: "door_hall_closed"
+      trigger:
+        platform: state
+        entity_id: binary_sensor.0x00158d000398835a_contact
+        to: "off"
+        for:
+          seconds: 1
+      condition:
+          - condition: state
+            entity_id: group.core
+            state: "home"
+      action:
+        - service: notify.telegram
+          data:
+            message: "Дверь в зал закрыта"
+
+    - alias: "door_bedroom_open"
+      trigger:
+        platform: state
+        entity_id: binary_sensor.0x00158d000396f1d0_contact
+        to: "on"
+        for:
+          seconds: 1
+      condition:
+          - condition: state
+            entity_id: group.core
+            state: "home"
+      action:
+        - service: notify.telegram
+          data:
+            message: "Кто открыл дверь в спальню?"
+
+    - alias: "door_bedroom_closed"
+      trigger:
+        platform: state
+        entity_id: binary_sensor.0x00158d000396f1d0_contact
+        to: "off"
+        for:
+          seconds: 1
+      condition:
+          - condition: state
+            entity_id: group.core
+            state: "home"
+      action:
+        - service: notify.telegram
+          data:
+            message: "Дверь в спальню закрыта"

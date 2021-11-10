@@ -1,0 +1,216 @@
+bedroom:
+##############
+  sensor: #Сенсторы
+##############
+    # Необходимая влажность в ванной
+    - platform: template
+      sensors:
+        bedroom_main_temperature:
+          friendly_name: "Температура в спальне"
+          unit_of_measurement: "°C"
+          icon_template: mdi:thermometer
+          value_template: >-
+            {{((states('sensor.cleargrass_air_temperature')|float+ states('sensor.0x00158d00063dd379_temperature')|float)/2)|round(1)}}
+##############
+  automation: #Автоматизации
+##############
+
+
+    - alias: " turnoff_heating_bedroom_if_window_open" # Выклчаем отопление если окно открыто
+      trigger:
+        platform: state
+        entity_id: binary_sensor.0x00158d0006c415b5_contact
+        to: "on"
+        for:
+          minutes: 1
+      action:
+        - service: climate.set_hvac_mode
+          target:
+            entity_id: climate.0x842e14fffe5a3002 #Термоголова в спальне
+          data:
+            hvac_mode: 'off'
+
+    - alias: " turnon_heating_bedroom_if_window_close" # Вклчаем отопление если окно закрыто
+      trigger:
+        platform: state
+        entity_id: binary_sensor.0x00158d0006c415b5_contact
+        to: "off"
+        for:
+          minutes: 1
+      action:
+        - service: climate.set_hvac_mode
+          target:
+            entity_id: climate.0x842e14fffe5a3002 #Термоголова в спальне
+          data:
+            hvac_mode: 'auto'
+
+# Управление светом
+    - alias: "switchButton1"
+      trigger:
+        platform: state
+        entity_id: sensor.0x04cf8cdf3c7d3864_action
+        to: "button_1_single"
+      action:
+        - service: script.light_bedroom_ch_1
+
+    - alias: "switchButton2" #Включаем автоматический кондиционер
+      trigger:
+        platform: state
+        entity_id: sensor.0x04cf8cdf3c7d3864_action
+        to: "button_2_single"
+      action:
+        - service: switch.toggle
+          data:
+            entity_id: switch.air_conditioner_switch
+
+    - alias: "switchButton3"
+      trigger:
+        platform: state
+        entity_id: sensor.0x04cf8cdf3c7d3864_action
+        to: "button_3_single"
+      action:
+        - service: script.light_bedroom_ch_2
+
+    - alias: "switchButton4"
+      trigger:
+        platform: state
+        entity_id: sensor.0x04cf8cdf3c7d3864_action
+        to: "button_4_single"
+      action:
+        - service: input_boolean.toggle
+          data:
+            entity_id: input_boolean.doorbell_input_boolean
+
+    - alias: "switchButton5"
+      trigger:
+        platform: state
+        entity_id: sensor.0x04cf8cdf3c7d3864_action
+        to: "button_5_single"
+      action:
+        - service: script.light_bedroom_ch_3
+
+    - alias: "switchButton6"
+      trigger:
+        platform: state
+        entity_id: sensor.0x04cf8cdf3c7d3864_action
+        to: "button_6_single"
+      action:
+        - service: switch.toggle
+          data:
+            entity_id: switch.0xec1bbdfffe0e4df8_right
+
+    # Увлажнитель
+    - alias: turningOnHumidifierInBedRoom
+      trigger:
+        - platform: numeric_state
+          entity_id: sensor.cleargrass_air_humidity
+          below: 45
+          for:
+            minutes: 1
+      condition:
+        - condition: state
+          entity_id: group.Core
+          state: "home"
+        - condition: state
+          entity_id: binary_sensor.open_windows
+          state: "off"
+      action:
+        - service: switch.turn_on
+          data:
+            entity_id: switch.0x842e14fffefdac4a_l1
+
+    - alias: turningOffHumidifierInBedRoom
+      trigger:
+        - platform: numeric_state
+          entity_id: sensor.cleargrass_air_humidity
+          above: 50
+          for:
+            minutes: 1
+      action:
+        - service: switch.turn_off
+          data:
+            entity_id: switch.0x842e14fffefdac4a_l1
+
+    ### Управление батареей
+    - alias: heatTemperatureUpdateAndCalibration
+      trigger:
+        - platform: time_pattern
+          minutes: "/4"
+        - platform: template
+          value_template: "{{ (state_attr('climate.0x842e14fffe5a3002', 'temperature')|float - states('sensor.bedroom_main_temperature')|float)|abs > 0.25 }}"
+          for: "00:00:05"
+      action:
+        - service: mqtt.publish
+          data_template:
+            topic: "zigbee2mqtt/BedroomThermostat01/set/local_temperature_calibration"
+            payload_template: >-
+              {{(state_attr('climate.0x842e14fffe5a3002','local_temperature_calibration')|float -
+                state_attr('climate.0x842e14fffe5a3002', 'current_temperature')|float +
+                states('sensor.bedroom_main_temperature')|float + 128)|round(1,'half')}}
+
+    # Сообщаем что батарейки в голве надо заменить
+    - alias: "replacingBatteriesInHead"
+      trigger:
+        platform: state
+        entity_id: binary_sensor.0x842e14fffe5a3002_battery_low
+        to: "on"
+        for:
+          minutes: 60
+      action:
+        - service: notify.telegram
+          data:
+            message: |
+              ❎ 🔋 👳
+              Уже час висит предупрежение о низком заряде батареек в голове батареи спальни, купи 2шт АА и замени.
+
+#    ### На ночь делаем прохладнее
+#    - alias: "nightIsColder"
+#      trigger:
+#        - platform: time
+#          at:
+#            - "20:00:00"
+#            - "21:30:00"
+#      action:
+#        - service: climate.set_temperature
+#          data_template:
+#            entity_id: climate.0x842e14fffe5a3002
+#            temperature: >-
+#              {{ (state_attr('climate.0x842e14fffe5a3002', 'temperature') | float - 0.5) }}
+#        - delay: 30
+#        - service: climate.set_temperature
+#          data_template:
+#            entity_id: climate.gostinaia
+#            temperature: >-
+#              {{ (state_attr('climate.gostinaia', 'temperature') | float - 0.5) }}
+#    # С утра потеплее
+#    - alias: "warmerDuringDay"
+#      trigger:
+#        - platform: time
+#          at:
+#            - "6:00:00"
+#            - "8:00:00"
+#      action:
+#        - service: climate.set_temperature
+#          data_template:
+#            entity_id: climate.0x842e14fffe5a3002
+#            temperature: >-
+#              {{ (state_attr('climate.0x842e14fffe5a3002', 'temperature') | float + 0.5) }}
+#        - delay: 30
+#        - service: climate.set_temperature
+#          data_template:
+#            entity_id: climate.gostinaia
+#            temperature: >-
+#              {{ (state_attr('climate.gostinaia', 'temperature') | float + 0.5) }}
+
+    - alias: "bedroomIsOnFire" #Высокая температура дома
+      trigger:
+        - above: "40"
+          platform: numeric_state
+          entity_id: sensor.cleargrass_air_temperature
+          for:
+            minutes: 1
+      action:
+        service: notify.telegram
+        data_template:
+          title: "Горим?"
+          message: "Температура в спальне больше 40!!!"

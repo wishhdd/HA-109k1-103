@@ -1,0 +1,22 @@
+heat_meter:
+##############
+  counter: # счетчик 
+##############
+    heat_meter:
+      step: 0.001
+
+##############
+  automation: #Автоматизации
+##############
+    alias: heat_meter
+    trigger:
+    - entity_id: binary_sensor.0x00158d00039d4fad_contact
+      platform: state
+      to: 'on'
+    action:
+    - service: counter.increment
+      data:
+        entity_id: counter.heat_meter
+    - service: notify.telegram
+      data_template:
+        message: "Счетчик тепла тик"

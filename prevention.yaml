@@ -1,0 +1,55 @@
+prevention:
+  automation: #Автоматизации
+    #Передергиваем задвижки
+    - alias: "preventionOfGateValves"
+      trigger:
+        - platform: time
+          at: "05:30:00"
+      condition:
+        - condition: template
+          value_template: "{{(2 == now().day or 15 == now().day)}}"
+      action:
+        - service: script.turn_on
+          entity_id: script.pz
+
+    #Передергиваем задвижки
+    - alias: "warningPreventionOfGateValves"
+      trigger:
+        - platform: time
+          at: "22:30:00"
+      condition:
+        - condition: template
+          value_template: "{{(1 == now().day or 14 == now().day)}}"
+      action:
+        - service: notify.telegram
+          data:
+            message: "Напоминаю что сегодня в 5 утра 30 минут будет проходить профилактика задвижек."
+
+  script: #Скрипты
+    #Передергиваем задвижки
+    prevention_of_gate_valves:
+      sequence:
+        - service: notify.telegram96
+          data:
+            message: "Начинаем профилактику задвижек:"
+        - service: switch.turn_on
+          data:
+            entity_id: switch.0xec1bbdfffe0e4df8_center
+        - delay: 30
+        - service: notify.telegram96
+          data:
+            message: "Батарея в гостинной включена."
+        - service: switch.turn_on
+          data:
+            entity_id: switch.0x842e14fffefce063_l3
+        - delay: 600
+        - service: switch.turn_off
+          data:
+            entity_id: switch.0x842e14fffefce063_l3
+        - service: switch.turn_on
+          data:
+            entity_id: switch.0x842e14fffefce063_l3
+        - delay: 30
+        - service: notify.telegram96
+          data:
+            message: "Батарея в гостинной выключена, профилактика закончена."

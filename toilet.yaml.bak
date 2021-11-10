@@ -1,0 +1,176 @@
+toilet:
+  timer: #Таймеры
+    not_who_did_not_enter: #таймер для света в туалете не кто не вошел
+      duration: "00:00:30"
+
+  input_number: #Ввод цифр
+    tsc_in:
+      name: TSC_in
+      initial: 1
+      min: 1
+      max: 15
+      step: 0.5
+      icon: mdi:update
+
+  automation: #Автоматизации
+    - alias: switchingLightToilet #  Свет по выключателю
+      trigger:
+        - platform: state
+          entity_id:
+            - sensor.0x00158d0004550fa5_action
+          to:
+            - "single_left"
+            - "single_right"
+      action:
+        - service: light.toggle
+          data:
+            entity_id: light.0x00158d0004112e39
+    #        - service: timer.start
+    #          data:
+    #            entity_id: timer.not_who_did_not_enter
+
+    - alias: toiletLightOn #  Свет включить
+      trigger:
+        - platform: state
+          entity_id:
+            - binary_sensor.0x00158d00039b4472_contact
+          to: "on"
+      action:
+        - service: light.turn_on
+          data:
+            entity_id: light.0x00158d0004112e39
+    #        - service: timer.start
+    #          data:
+    #            entity_id: timer.not_who_did_not_enter
+
+    - alias: "turnOnLightOnMotionToilet" # Включение света в туалете  по движению
+      trigger:
+        platform: state
+        entity_id:
+          - binary_sensor.0x00158d000397609f_occupancy
+        to: "on"
+      action:
+        - service: light.turn_on
+          data:
+            entity_id: light.0x00158d0004112e39
+        - delay: 5
+        - service: timer.cancel
+          data:
+            entity_id: timer.not_who_did_not_enter
+        - service: input_number.increment
+          data:
+            entity_id: input_number.tsc_in
+
+    - alias: "turnOffLightOnMotionToilet" # нет движение - выключаем свет
+      trigger:
+        platform: state
+        entity_id: binary_sensor.0x00158d000397609f_occupancy
+        to: "off"
+        for:
+          minutes: "{{states('input_number.tsc_in')|int }}"
+      action:
+        - service: light.turn_off
+          data:
+            entity_id: light.0x00158d0004112e39
+
+    - alias: toiletTimerStart
+      trigger:
+        - platform: state
+          entity_id: light.0x00158d0004112e39
+          to: "on"
+      action:
+        - service: timer.start
+          data:
+            entity_id: timer.not_who_did_not_enter
+
+    - alias: turnOffLightsToiletTimer #выключение свет в туалете по таймеру
+      trigger:
+        platform: event
+        event_type: timer.finished
+        event_data:
+          entity_id: timer.not_who_did_not_enter
+      condition:
+        - condition: state
+          entity_id:
+            - binary_sensor.0x00158d000397609f_occupancy
+          state: "off"
+      action:
+        - service: light.turn_off
+          data:
+            entity_id: light.0x00158d0004112e39
+
+    - alias: lightToiletOff #  Свет выключен в туалете, сбрасываем счетчик
+      trigger:
+        - platform: state
+          entity_id: light.0x00158d0004112e39
+          to: "off"
+          for:
+            minutes: 1
+      action:
+        - service: input_number.set_value
+          target:
+            entity_id: input_number.TSC_in
+          data:
+            value: 1
+
+    - alias: "changingBrightnessToilet" # Включаем свет и меняем яркость в зависимости от часа
+      trigger:
+        platform: time
+        at:
+          - "7:00:00"
+          - "21:00:00"
+      action:
+        - choose:
+            - conditions: >
+                {{states('light.0x00158d0004112e39') == "on"}}
+              sequence:
+                - service: light.turn_on
+                  data_template:
+                    entity_id: light.0x00158d0004112e39
+                    brightness: >-
+                      {% set h = now().hour | int %}
+                      {% if h >= 21 and h < 24 %}
+                      1
+                      {% elif h >= 0 and h < 7 %}
+                      1
+                      {% elif h >= 7 and h < 21 %}
+                      255
+                      {% endif %}
+                    color_temp: >-
+                      {% set h = now().hour | int %}
+                      {% if h >= 21 and h < 24 %}
+                      500
+                      {% elif h >= 0 and h < 7 %}
+                      500
+                      {% elif h >= 7 and h < 21 %}
+                      153
+                      {% endif %}
+        - choose:
+            - conditions: >
+                {{states('light.0x00158d0004112e39') == "off"}}
+              sequence:
+                - service: light.turn_on
+                  data_template:
+                    entity_id: light.0x00158d0004112e39
+                    brightness: >-
+                      {% set h = now().hour | int %}
+                      {% if h >= 21 and h < 24 %}
+                      1
+                      {% elif h >= 0 and h < 7 %}
+                      1
+                      {% elif h >= 7 and h < 21 %}
+                      255
+                      {% endif %}
+                    color_temp: >-
+                      {% set h = now().hour | int %}
+                      {% if h >= 21 and h < 24 %}
+                      500
+                      {% elif h >= 0 and h < 7 %}
+                      500
+                      {% elif h >= 7 and h < 21 %}
+                      153
+                      {% endif %}
+                - delay: 5
+                - service: light.turn_off
+                  data:
+                    entity_id: light.0x00158d0004112e39

@@ -1,0 +1,206 @@
+toilet:
+##############
+  input_number: #Ввод цифр
+##############
+    tsc_in:
+      name: TSC_in
+      initial: 1
+      min: 1
+      max: 20
+      step: 1
+      icon: mdi:update
+##############
+  automation: #Автоматизации
+##############
+
+    - alias: toiletLightOn #  Свет включить датчик размыкания
+      trigger:
+        - platform: state
+          entity_id:
+            - binary_sensor.0x00158d00039b4472_contact
+          to: "on"
+      action:
+        - service: light.turn_on
+          data:
+            entity_id: light.0x00158d0004112e39
+        - service: input_number.set_value
+          target:
+            entity_id: input_number.tsc_in
+          data:
+            value: 5
+
+    - alias: "turnOnLightOnMotionToilet" # Включение света в туалете  по движению
+      trigger:
+        platform: state
+        entity_id: binary_sensor.0x00158d000397609f_occupancy
+        to: "on"
+      action:
+        - service: light.turn_on
+          data:
+            entity_id: light.0x00158d0004112e39
+        - service: input_number.increment
+          data:
+            entity_id: input_number.tsc_in
+
+    - alias: "turnOnLightOnMotionToiletMAX" # Включение света в туалете  по движению на максимум
+      trigger:
+        platform: state
+        entity_id: binary_sensor.0x00158d000397609f_occupancy
+        to: "on"
+      condition:
+        condition: state
+        entity_id: binary_sensor.0x00158d00039b4472_contact
+        state: "off"
+      action:
+        - service: light.turn_on
+          data:
+            entity_id: light.0x00158d0004112e39
+        - service: input_number.set_value
+          target:
+            entity_id: input_number.tsc_in
+          data:
+            value: 15
+#            value: "{{state_attr('input_number.tsc_in', 'MAX')|int}}"
+
+    - alias: switchingLightToiletOn #  Свет по выключателю включаем
+      trigger:
+        - platform: state
+          entity_id:
+            - sensor.0x00158d0004550fa5_action
+          to:
+            - "single_left"
+            - "single_right"
+      condition:
+        condition: state
+        entity_id: light.0x00158d0004112e39
+        state: "off"
+      action:
+        - service: light.turn_on
+          data:
+            entity_id: light.0x00158d0004112e39
+        - service: input_number.set_value
+          target:
+            entity_id: input_number.tsc_in
+          data:
+            value: 10
+
+    - alias: switchingLightToiletOff #  Свет по выключателю выключаем
+      trigger:
+        - platform: state
+          entity_id:
+            - sensor.0x00158d0004550fa5_action
+          to:
+            - "single_left"
+            - "single_right"
+      condition:
+        condition: state
+        entity_id: light.0x00158d0004112e39
+        state: "on"
+        for:
+          seconds: 5
+      action:
+        - service: light.turn_off
+          data:
+            entity_id: light.0x00158d0004112e39
+
+    - alias: "turnOffLightOnMotionToilet" # нет движение - выключаем свет
+      trigger:
+        platform: state
+        entity_id: binary_sensor.0x00158d000397609f_occupancy
+        to: "off"
+        for:
+          minutes: "{{states('input_number.tsc_in')|int }}"
+      action:
+        - service: light.turn_off
+          data:
+            entity_id: light.0x00158d0004112e39
+
+    - alias: lightToiletOff #  Свет выключен в туалете, сбрасываем счетчик
+      trigger:
+        - platform: state
+          entity_id: light.0x00158d0004112e39
+          to: "off"
+          for:
+            minutes: 1
+      action:
+        - service: input_number.set_value
+          target:
+            entity_id: input_number.TSC_in
+          data:
+            value: 1
+
+    - alias: changingBrightnessToileDay #  Свет днем
+      trigger:
+        - platform: state
+          entity_id: binary_sensor.sens_day
+          to: "on"
+      action:
+        - choose:
+            - conditions: >
+                {{states('light.0x00158d0004112e39') == "on"}}
+              sequence:
+                - service: light.turn_on
+                  data_template:
+                    entity_id: light.0x00158d0004112e39
+                    brightness: 254
+                    color_temp: 153
+        - choose:
+            - conditions: >
+                {{states('light.0x00158d0004112e39') == "off"}}
+              sequence:
+                - service: light.turn_on
+                  data_template:
+                    entity_id: light.0x00158d0004112e39
+                    brightness: 254
+                    color_temp: 153
+                - delay: 10
+                - service: light.turn_off
+                  data:
+                    entity_id: light.0x00158d0004112e39
+
+    - alias: changingBrightnessToileDay #  Свет ночью
+      trigger:
+        - platform: state
+          entity_id: binary_sensor.sens_day
+          to: "off"
+      action:
+        - choose:
+            - conditions: >
+                {{states('light.0x00158d0004112e39') == "on"}}
+              sequence:
+                - service: light.turn_on
+                  data_template:
+                    entity_id: light.0x00158d0004112e39
+                    brightness: 5
+                    color_temp: 495
+        - choose:
+            - conditions: >
+                {{states('light.0x00158d0004112e39') == "off"}}
+              sequence:
+                - service: light.turn_on
+                  data_template:
+                    entity_id: light.0x00158d0004112e39
+                    brightness: 5
+                    color_temp: 495
+                - delay: 10
+                - service: light.turn_off
+                  data:
+                    entity_id: light.0x00158d0004112e39
+
+    - alias: addingMinutesToToilet #  добавляем 10 мин
+      trigger:
+        - platform: state
+          entity_id:
+            - sensor.0x00158d0004550fa5_action
+          to:
+            - "hold_left"
+            - "hold_right"
+      action:
+        - service: light.turn_on
+          data:
+            entity_id: light.0x00158d0004112e39
+        - service: input_number.set_value
+          target:
+            entity_id: input_number.TSC_in
+          data:
+            value: 10

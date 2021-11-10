@@ -1,0 +1,111 @@
+#
+boiler:
+  #
+  ##############
+  timer:
+    ##############
+    work_boiler_day:
+      duration: "00:45:00"
+  ##############
+  input_text:
+    ##############
+    value_water:
+      name: value_water
+      initial: 0
+  ##############
+  automation: #Автоматизации
+    ##############
+    - alias: "boiler_off"
+      trigger:
+        - platform: time
+          at: "08:30:00"
+      action:
+        - service: switch.turn_off
+          data:
+            entity_id: switch.0x60a423fffead7948 #Бойлер
+
+    - alias: "boiler_on"
+      trigger:
+        - platform: time
+          at: "03:00:00"
+      action:
+        - service: switch.turn_on
+          data:
+            entity_id: switch.0x60a423fffead7948 #Бойлер
+
+    - alias: "set_value_water"
+      trigger:
+        - platform: time
+          at: "08:01:00"
+      action:
+        - service: input_text.set_value
+          target:
+            entity_id: input_text.value_water
+          data:
+            value: "{{states('sensor.cold_water_monthly')|float+0.06}}"
+
+    - alias: "checking_flow_rate_water"
+      condition:
+        - condition: template
+          value_template: "{{(states('input_text.value_water')|float)<states('sensor.cold_water_monthly')|float}}"
+        - condition: state
+          entity_id: binary_sensor.sens_day
+          state: 'on'
+      trigger:
+        - platform: time_pattern
+          minutes: "/30"
+      action:
+        - service: switch.turn_on
+          data:
+            entity_id: switch.0x60a423fffead7948 #Бойлер
+        - service: input_text.set_value
+          target:
+            entity_id: input_text.value_water
+          data:
+            value: "{{states('sensor.cold_water_monthly')|float+0.06}}"
+        - service: timer.start
+          target:
+            entity_id: timer.work_boiler_day
+
+    - alias: "turning_off_boiler_by_timer"
+      trigger:
+        - platform: event
+          event_type: timer.finished
+          event_data:
+            entity_id: timer.work_boiler_day
+      action:
+        - service: switch.turn_off
+          data:
+            entity_id: switch.0x60a423fffead7948 #Бойлер
+
+    - alias: "high_humidity_boiler_is_working" #Высокая влажность - бойлер работает
+      condition:
+        condition: state
+        entity_id: binary_sensor.sens_day
+        state: 'on'
+      trigger:
+        - platform: numeric_state
+          entity_id: sensor.0x00158d0003cc5589_humidity
+          above: sensor.humidity_vannay
+          for:
+            minutes: 1
+      action:
+        - service: switch.turn_on
+          data:
+            entity_id: switch.0x60a423fffead7948 #Бойлер
+
+    - alias: "low_humidity_boiler_turns_off" #Низкая влажность - бойлер выключается
+      condition:
+        condition: state
+        entity_id: timer.work_boiler_day
+        state: "idle"
+      trigger:
+        - platform: numeric_state
+          entity_id: sensor.0x00158d0003cc5589_humidity
+          below: sensor.humidity_vannay
+          for:
+            minutes: 1
+      action:
+        - service: switch.turn_off
+          data:
+            entity_id: switch.0x60a423fffead7948 #Бойлер

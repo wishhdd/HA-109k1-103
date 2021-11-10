@@ -1,0 +1,19 @@
+street:
+#
+  sensor:
+#
+
+  - platform: template # ГектоПаскали переводим в мм ртутного столба
+    sensors:
+      atmospheric_pressure:
+        friendly_name: "Атмосферное давление"
+        value_template: >
+              {% if states('sensor.0x00158d0006794cbe_pressure') in ['unknown', 'unavailable'] %}
+              unavailable
+              {% else %}
+              {{ ((((states('sensor.0x00158d0006794cbe_pressure'))|float 
+              *1000) * 0.750064)/1000)|round(1)}}
+              {% endif %}
+        icon_template: mdi:gauge
+        unit_of_measurement: "мм рт ст"
+        

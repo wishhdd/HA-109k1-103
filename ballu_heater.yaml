@@ -1,0 +1,22 @@
+#
+ballu_heater:
+#
+
+  climate: #Климат
+##############
+    - platform: generic_thermostat
+      name: "ballu_heater_01"
+      heater: switch.0x60a423fffef8dc96
+      target_sensor: sensor.0x00158d000418243c_temperature
+      min_temp: 20
+      max_temp: 27
+      target_temp: 23
+      ac_mode: false
+      min_cycle_duration:
+        seconds: 300
+      cold_tolerance: 0.3
+      hot_tolerance: 0.3
+      initial_hvac_mode: "heat"
+      precision: 0.5
+      keep_alive:
+        minutes: 30

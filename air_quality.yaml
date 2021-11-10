@@ -1,0 +1,95 @@
+aq:
+  # Качество воздуха
+
+  #  air_quality:
+  #    - platform: xiaomi_miio
+  #      name: cleargrass_air_monitor
+  #      host: 192.168.1.35
+  #      token: 6843345067786f5739775a58776e4d52
+
+  sensor:
+    - platform: template
+      sensors:
+        cleargrass_air_co2a:
+          friendly_name: "Угликислый газ"
+          value_template: "{{ state_attr('air_quality.cleargrass_air_monitor', 'carbon_dioxide') }}"
+          icon_template: mdi:molecule-co2
+          unit_of_measurement: "ppm"
+
+    - platform: template
+      sensors:
+        cleargrass_air_tvoc:
+          friendly_name: "ЛОС"
+          value_template: "{{ state_attr('air_quality.cleargrass_air_monitor', 'total_volatile_organic_compounds') }}"
+          icon_template: mdi:alpha-t
+          unit_of_measurement: "ppb"
+
+    - platform: template
+      sensors:
+        cleargrass_air_pm25:
+          friendly_name: "Пыль"
+          value_template: "{{ state_attr('air_quality.cleargrass_air_monitor', 'particulate_matter_2_5') }}"
+          icon_template: mdi:alpha-p
+          unit_of_measurement: "ppm"
+
+    - platform: template
+      sensors:
+        cleargrass_air_temperature:
+          friendly_name: "Температура"
+          value_template: "{{ state_attr('air_quality.cleargrass_air_monitor', 'temperature') }}"
+          icon_template: mdi:temperature-celsius
+          unit_of_measurement: "°C"
+
+    - platform: template
+      sensors:
+        cleargrass_air_humidity:
+          friendly_name: "Влажность"
+          value_template: "{{ state_attr('air_quality.cleargrass_air_monitor', 'humidity') }}"
+          icon_template: mdi:water-percent
+          unit_of_measurement: "%"
+  #
+  automation: #Автоматизации
+    #
+    ##### Предупреждение о качестве воздуха
+    #Предупреждение про СО2 спальня
+    - alias: Предупреждение про СО2 спальня
+      trigger:
+        - platform: numeric_state
+          entity_id: sensor.cleargrass_air_co2a
+          above: 2000
+          for:
+            minutes: 5
+      action:
+        service: notify.telegram
+        data_template:
+          title: "🛏 ⏫ СО2"
+          message: "В спальне высокое содержание СО2, {{ states('sensor.cleargrass_air_co2a')|float }} при допустимых 1500."
+    #
+    #Предупреждение про ЛОВ спальня
+    - alias: Предупреждение про ЛОВ спальня
+      trigger:
+        - platform: numeric_state
+          entity_id: sensor.cleargrass_air_tvoc
+          above: 500
+          for:
+            minutes: 5
+      action:
+        service: notify.telegram
+        data_template:
+          title: "🛏 ⏫ ♨ ⚗ 💄"
+          message: "В спальне высокое содержание летучих органических веществ, {{ states('sensor.cleargrass_air_tvoc')|float }} при допустимых 220."
+    #
+    #Предупреждение про пыль спальня
+    - alias: Предупреждение про пыль спальня
+      trigger:
+        - platform: numeric_state
+          entity_id: sensor.cleargrass_air_pm25
+          above: 400
+          for:
+            minutes: 5
+      action:
+        service: notify.telegram
+        data_template:
+          title: "🛏 ⏫ 🗑"
+          message: "В спальне высокое содержание пыли, {{ states('sensor.cleargrass_air_pm25')|float }} при допустимых 100."
+#

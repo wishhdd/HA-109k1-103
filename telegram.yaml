@@ -1,0 +1,22 @@
+telegram:
+  #Уведомления
+  notify:
+    - name: telegram
+      platform: telegram
+      chat_id: !secret telegram109k1
+    - name: telegram96
+      platform: telegram
+      chat_id: !secret telegram96
+    - name: telegramPK
+      platform: telegram
+      chat_id: !secret telegramPK
+
+      #Настройки телеграмм бота
+  telegram_bot:
+    - platform: polling
+      api_key: !secret telegramApiKey
+      allowed_chat_ids:
+        - !secret telegram109k1
+        - !secret telegram96
+        - !secret telegramPK
+

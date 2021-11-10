@@ -1,0 +1,21 @@
+dns325:
+  sensor:
+    # Состояние DNS325
+    - platform: mqtt
+      state_topic: "dns325/thdd1"
+      name: "SG1Tb"
+      icon: mdi:harddisk
+      unit_of_measurement: "°C"
+      #force_update: true
+    - platform: mqtt
+      state_topic: "dns325/thdd2"
+      name: "WD2Tb"
+      icon: mdi:harddisk
+      unit_of_measurement: "°C"
+
+    - platform: mqtt
+      state_topic: "dns325/cpu"
+      name: "CPU"
+      icon: mdi:cpu-32-bit
+      unit_of_measurement: "°C"
+      #force_update: true

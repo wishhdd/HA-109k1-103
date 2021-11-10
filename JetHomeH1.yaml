@@ -1,0 +1,73 @@
+jhh1:
+  #
+  #
+  automation:
+    #
+
+    - alias: persistentNotificationClearPwned #Очистка уведомлений о паролях
+      initial_state: true
+      mode: parallel
+      trigger:
+        - platform: event
+          event_type: call_service
+          event_data:
+            domain: persistent_notification
+            service: create
+      condition:
+        - condition: template
+          value_template: >
+            {{ 'supervisor_issue_pwned' in trigger.event.data.service_data.notification_id }}
+      action:
+        - service: persistent_notification.dismiss
+          data:
+            notification_id: >
+              {{ trigger.event.data.service_data.notification_id }}
+
+  #
+  sensor:
+    #
+
+    #    - platform: filesize # Размер базы данных
+    #      file_paths:
+    #        - /config/home-assistant_v2.db
+    - platform: systemmonitor # Общий мониторинг
+      resources:
+        - type: disk_use_percent
+        - type: memory_use_percent
+        - type: swap_use_percent
+        - type: processor_use
+        - type: processor_temperature
+
+  ##############
+  binary_sensor:
+    ##############
+
+    - platform: template
+      sensors:
+        sens_day:
+          friendly_name: "День"
+          value_template: "{{ ((now().hour)|float > 6) and ((now().hour|float+((now().minute|float)/60)|float)|float < 21.5)}}"
+
+  #
+  recorder: # Упралвение БД
+    #
+    purge_keep_days: 30
+    db_url: mysql://homeassistant:j103@192.168.1.100/homeassistant?charset=utf8mb4
+    commit_interval: 60
+  #    include:
+  #      domains:
+  #        - air_quality
+  #        - binary_sensor
+  #        - climate
+  #        - input_number
+  #        - light
+  #        - sensor
+  #        - switch
+  #        - counter
+
+  notify_events:
+    token: !secret notifyEventsToken
+
+  notify:
+    - name: notify_events
+      platform: notify_events
