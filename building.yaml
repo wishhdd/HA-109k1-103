@@ -16,7 +16,7 @@ building:
       condition:
           - condition: state
             entity_id: group.core
-            state: "home"
+            state: "not_home"
       action:
         - service: notify.telegram
           data:
@@ -32,7 +32,7 @@ building:
       condition:
           - condition: state
             entity_id: group.core
-            state: "home"
+            state: "not_home"
       action:
         - service: notify.telegram
           data:
@@ -48,7 +48,7 @@ building:
       condition:
           - condition: state
             entity_id: group.core
-            state: "home"
+            state: "not_home"
       action:
         - service: notify.telegram
           data:
@@ -64,7 +64,7 @@ building:
       condition:
           - condition: state
             entity_id: group.core
-            state: "home"
+            state: "not_home"
       action:
         - service: notify.telegram
           data:
