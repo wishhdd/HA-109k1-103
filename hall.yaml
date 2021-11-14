@@ -2,8 +2,8 @@ hall:
   ##############
   sensor: #Сенсторы
     ##############
-    # Необходимая влажность в ванной
-    - platform: template
+    
+    - platform: template # Средняя температура в зале
       sensors:
         hall_main_temperature:
           friendly_name: "Температура в зале"
@@ -11,6 +11,7 @@ hall:
           icon_template: mdi:thermometer
           value_template: >-
             {{((states('sensor.0x00158d0004186ed6_temperature')|float+ states('sensor.0x00158d00063dd803_temperature')|float)/2)|round(1)}}
+  
   ##############
   automation: #Автоматизации
     ##############
@@ -107,38 +108,6 @@ hall:
         - service: switch.turn_off
           data:
             entity_id: switch.0x842e14fffefce063_l2 #свет в батареи
-
-    - alias: TurnOnHumidifierInLivingRoom # Включаем увлажнитель
-      trigger:
-        - platform: numeric_state
-          entity_id: sensor.0x00158d0004186ed6_humidity
-          below: 45
-          for:
-            minutes: 5
-      condition:
-        - condition: state
-          entity_id: group.Core
-          state: "home"
-        - condition: state
-          entity_id: binary_sensor.open_windows
-          state: "off"
-      action:
-        - service: switch.turn_on
-          data:
-            entity_id: switch.0x842e14fffefce063_l4 #Увлажнитель
-
-    - alias: TurnOffHumidifierInLivingRoom # Выключаем увлажнитель
-      trigger:
-        - platform: numeric_state
-          entity_id: sensor.0x00158d0004186ed6_humidity
-          above: 50
-          for:
-            minutes: 5
-      action:
-        - service: switch.turn_off
-          data:
-            entity_id:
-              - switch.0x842e14fffefce063_l4 #Увлажнитель
 
     - alias: CheckWaterHall #Оповещение что кончилась вода
       trigger:

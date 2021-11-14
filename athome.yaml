@@ -10,20 +10,6 @@ athome:
         entity_id: group.Core
         to: "home"
       action:
-        #Включаем Увлажнители
-        - choose:
-            - conditions: >
-                {{states('sensor.0x00158d0004186ed6_humidity')|float < 45}}
-              sequence:
-                - service: switch.turn_on
-                  data:
-                    entity_id: switch.0x842e14fffefce063_l4 #Увлажнитель в гостиной
-            - conditions: >
-                {{states('sensor.cleargrass_air_humidity')|float < 45}}
-              sequence:
-                - service: switch.turn_on
-                  data:
-                    entity_id: switch.0x842e14fffefdac4a_l1 #Увлажнитель в в спальне
         - service: climate.set_hvac_mode # Включаем электро обогреватели
           target:
             entity_id:

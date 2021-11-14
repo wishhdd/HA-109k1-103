@@ -99,38 +99,6 @@ bedroom:
           data:
             entity_id: switch.0xec1bbdfffe0e4df8_right
 
-    # Увлажнитель
-    - alias: turningOnHumidifierInBedRoom
-      trigger:
-        - platform: numeric_state
-          entity_id: sensor.cleargrass_air_humidity
-          below: 45
-          for:
-            minutes: 1
-      condition:
-        - condition: state
-          entity_id: group.Core
-          state: "home"
-        - condition: state
-          entity_id: binary_sensor.open_windows
-          state: "off"
-      action:
-        - service: switch.turn_on
-          data:
-            entity_id: switch.0x842e14fffefdac4a_l1
-
-    - alias: turningOffHumidifierInBedRoom
-      trigger:
-        - platform: numeric_state
-          entity_id: sensor.cleargrass_air_humidity
-          above: 50
-          for:
-            minutes: 1
-      action:
-        - service: switch.turn_off
-          data:
-            entity_id: switch.0x842e14fffefdac4a_l1
-
     ### Управление батареей
     - alias: heatTemperatureUpdateAndCalibration
       trigger:

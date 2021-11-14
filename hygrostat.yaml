@@ -1,0 +1,78 @@
+hygrostat:
+##############
+  sensor: #Сенсторы
+##############
+    - platform: template
+      sensors:
+        bedroom_main_humidity:
+          friendly_name: "Влажность в спальне"
+          unit_of_measurement: "%"
+          icon_template: mdi:water-percent
+          device_class: humidity
+          value_template: >-
+            {{((states('sensor.cleargrass_air_humidity')|float+ states('sensor.0x00158d00063dd379_humidity')|float)/2)|round(1)}}
+        hall_main_humidity:
+          friendly_name: "Влажность в зале"
+          unit_of_measurement: "%"
+          icon_template: mdi:water-percent
+          device_class: humidity
+          value_template: >-
+            {{((states('sensor.0x00158d0004186ed6_humidity')|float+ states('sensor.0x00158d00063dd803_humidity')|float)/2)|round(1)}}
+
+##############
+  automation: #Автоматизации
+##############
+    - alias: TurnOffHumidifier # Выключаем увлажнители
+      trigger:
+        - platform: state
+          entity_id: group.Core
+          to: "not_home"
+        - platform: state
+          entity_id: binary_sensor.open_windows
+          to: "on"
+      action:
+        - service: humidifier.turn_off
+          target:
+            entity_id: 
+              - humidifier.bedroom_hygrostat
+              - humidifier.hall_hygrostat
+
+    - alias: TurnOnHumidifier # Включаем увлажнители
+      trigger:
+        - platform: state
+          entity_id: group.Core
+          to: "home"
+        - platform: state
+          entity_id: binary_sensor.open_windows
+          to: "off"
+      action:
+        - service: humidifier.turn_on
+          target:
+            entity_id: 
+              - humidifier.bedroom_hygrostat
+              - humidifier.hall_hygrostat
+##############
+  generic_hygrostat: # Уважнители
+##############
+
+  - name: Hall_hygrostat
+    humidifier: switch.0x842e14fffefce063_l4
+    target_sensor: sensor.hall_main_humidity
+    min_humidity: 35
+    max_humidity: 65
+    target_humidity: 50
+    min_cycle_duration:
+      seconds: 180
+    keep_alive:
+      minutes: 30
+
+  - name: Bedroom_hygrostat
+    humidifier: switch.0x842e14fffefdac4a_l1
+    target_sensor: sensor.bedroom_main_humidity
+    min_humidity: 35
+    max_humidity: 65
+    target_humidity: 50
+    min_cycle_duration:
+      seconds: 180
+    keep_alive:
+      minutes: 30

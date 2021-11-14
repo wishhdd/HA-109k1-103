@@ -8,6 +8,10 @@ windows:
       sensors:
         open_windows:
           friendly_name: "Открытые окна"
+          delay_on:
+            minutes: 1
+          delay_off:
+            minutes: 1
           value_template: "{{
                           is_state('binary_sensor.0x00158d0006c3cfcc_contact', 'on')
                           or is_state('binary_sensor.0x00158d0006c3ff03_contact', 'on')
@@ -18,52 +22,3 @@ windows:
 ##############
   automation: #Автоматизации
 ##############
-
-    - alias: "windows_open_humidifier_off" # Открыли окно - выключили увлажнители
-      trigger:
-        platform: state
-        entity_id: binary_sensor.open_windows
-        to: "on"
-        for:
-          minutes: 1
-      action:
-        - service: switch.turn_off
-          target:
-            entity_id:
-              - switch.0x842e14fffefce063_l4 #Увлажнитель в зале
-              - switch.0x842e14fffefdac4a_l1 #Увлажнитель в в спальне
-
-    - alias: "windows_open_humidifier_hall_on" # Закрыли окно - включили увлажнители в зале
-      trigger:
-        platform: state
-        entity_id: binary_sensor.open_windows
-        to: "off"
-        for:
-          minutes: 1
-      condition:
-        - condition: numeric_state
-          entity_id: sensor.0x00158d0004186ed6_humidity
-          below: 45
-      action:
-        - service: switch.turn_on
-          target:
-            entity_id:
-              - switch.0x842e14fffefce063_l4 #Увлажнитель в зале
-              - switch.0x842e14fffefdac4a_l1 #Увлажнитель в в спальне
-
-    - alias: "windows_open_humidifier_bedroom_on" # Закрыли окно - включили увлажнители в спальне
-      trigger:
-        platform: state
-        entity_id: binary_sensor.open_windows
-        to: "off"
-        for:
-          minutes: 1
-      condition:
-        - condition: numeric_state
-          entity_id: sensor.cleargrass_air_humidity
-          below: 45
-      action:
-        - service: switch.turn_on
-          target:
-            entity_id:
-              - switch.0x842e14fffefdac4a_l1 #Увлажнитель в в спальне
