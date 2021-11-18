@@ -3,18 +3,73 @@ hall:
   sensor: #Сенсторы
     ##############
     
-    - platform: template # Средняя температура в зале
-      sensors:
-        hall_main_temperature:
-          friendly_name: "Температура в зале"
-          unit_of_measurement: "°C"
-          icon_template: mdi:thermometer
-          value_template: >-
-            {{((states('sensor.0x00158d0004186ed6_temperature')|float+ states('sensor.0x00158d00063dd803_temperature')|float)/2)|round(1)}}
+  - platform: template
+    sensors:
+      hall_main_temperature:  # Средняя температура в зале
+        friendly_name: "Температура в зале"
+        unit_of_measurement: "°C"
+        icon_template: mdi:thermometer
+        value_template: >-
+          {{((states('sensor.0x00158d0004186ed6_temperature')|float+ states('sensor.0x00158d00063dd803_temperature')|float)/2)|round(1)}}
   
-  ##############
+      condition_tv_hall: # Состояние телевизора
+        friendly_name: "Состояние телевизора в зале"
+        value_template: >
+          {%if is_state('switch.0x842e14fffe3668ab', 'off') %}
+            power_off
+          {% elif state_attr('switch.0x842e14fffe3668ab', 'power')|float < 10 %}
+            standby
+          {% elif state_attr('switch.0x842e14fffe3668ab', 'power')|float > 10 %}
+            work
+          {% else %}
+            failed
+          {% endif %}
+        icon_template: >
+          {% if is_state("sensor.condition_tv_hall", "power_off") %}
+            mdi:power-plug-off
+          {% elif is_state("sensor.condition_tv_hall", "standby") %}
+            mdi:television-off
+          {% elif is_state("sensor.condition_tv_hall", "work") %}
+            mdi:television
+          {% else %}
+            mdi:alert
+          {% endif %}
+
+##############
+  binary_sensor:
+##############
+
+  - platform: ping
+    host: 192.168.1.96
+    name: "WishGamePC"
+
+  - platform: template
+    sensors:
+      presence_hall:
+        friendly_name: "Кто то есть в зале"
+        delay_off:
+          minutes: 10
+        value_template: "{{
+                        is_state('binary_sensor.0x000d6f00159a3ed7_occupancy', 'on')
+                        or is_state('sensor.condition_tv_hall', 'work')
+                        or is_state('binary_sensor.WishGamePC', 'on')
+                        }}"
+
+##############
   automation: #Автоматизации
-    ##############
+##############
+
+    - alias: "TurnOffLightsHallI" # выключаем свет в зале если не кого нет
+      trigger:
+        platform: state
+        entity_id: binary_sensor.presence_hall 
+        to: "off"
+      action:
+        - service: switch.turn_off
+          target:
+            entity_id:
+              - switch.0x680ae2fffe71aff5_left #Свет батареи
+              - switch.0x680ae2fffe71aff5_left #центральный свет
 
     - alias: " turnoff_heating_hall_if_window_open" # Выклчаем отопление если окно открыто
       trigger:
@@ -81,9 +136,8 @@ hall:
     - alias: "turnOnBatteryLightWhenTurningOffTV" #включаем свет батареи при выклчюении телевизора
       trigger:
         platform: state
-        entity_id: media_player.samsung_ue40d6100_2 #Телевизор в зале
-        from: "on"
-        to: "off"
+        entity_id: sensor.condition_tv_hall #Телевизор в зале
+        to: "work"
       condition:
         condition: and
         conditions:
@@ -102,8 +156,8 @@ hall:
     - alias: "turnOffBatteryLightWhenTurningOnTV" #выключаем свет батареи при выключении телевизора
       trigger:
         platform: state
-        entity_id: media_player.samsung_ue40d6100_2 #Телевизор в зале
-        to: "on"
+        entity_id: sensor.condition_tv_hall #Телевизор в зале
+        to: "standby"
       action:
         - service: switch.turn_off
           data:
@@ -174,7 +228,7 @@ hall:
       action:
         - service: switch.turn_off
           data:
-            entity_id: switch.0x680ae2fffe71aff5_switch_left
+            entity_id: switch.0x680ae2fffe71aff5_left
         - service: switch.turn_off
           data:
             entity_id: switch.0x842e14fffefce063_l2

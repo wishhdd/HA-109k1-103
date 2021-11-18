@@ -1,5 +1,7 @@
 bathroom:
+##############
   sensor: #Сенсторы
+##############
     # Необходимая влажность в ванной
     - platform: template
       sensors:
@@ -20,7 +22,29 @@ bathroom:
             {% endif %}
             {{humidity + 5}}
 
+##############
+  binary_sensor:
+##############
+
+  - platform: template
+    sensors:
+      hood_bathroom:
+        friendly_name: "Вытяжка в ванной"
+        delay_on:
+          minutes: 1
+        delay_off:
+          minutes: 1
+        value_template: "{{
+                        (is_state('binary_sensor.0x00158d0006c3fbf6_contact', 'on')
+                        or is_state('switch.0xec1bbdfffe6c143e_right', 'off'))
+                        and states('sensor.humidity_vannay')|int < states('sensor.0x00158d0003cc5589_humidity')|int                    
+                        and is_state('binary_sensor.sens_day', 'on')
+                        }}"
+
+##############
   automation: #Автоматизации
+##############
+
     - alias: switchingFan2Click #Переключаем вентилятор по двойному клику на куханом выключателе
       trigger:
         platform: state
@@ -43,49 +67,21 @@ bathroom:
           data:
             entity_id: switch.0xec1bbdfffe6c143e_right
 
-    - alias: "turnsOnFanWhenHumidityIsHighAndLightIsOff" #Включает вентилятор после душа при влажности высокой и выключенном свете
+    - alias: "turnsOnFanWhenHumidityIsHighAndLightIsOff" #Включает вентилятор
       trigger:
         platform: state
-        entity_id: switch.0xec1bbdfffe6c143e_right
-        to: "off"
-        for:
-          seconds: 60
-      condition:
-        condition: and
-        conditions:
-          - condition: template
-            value_template: "{{states('sensor.humidity_vannay')|int < states('sensor.0x00158d0003cc5589_humidity')|int}}"
-          - condition: state
-            entity_id: binary_sensor.sens_day
-            state: "on"
+        entity_id: binary_sensor.hood_bathroom
+        to: "on"
       action:
         - service: switch.turn_on
           data:
             entity_id: switch.0x00124b001e721d27
 
-    - alias: "turnOffFanWhenLightIsTurnedOn" #Выключаем вентилятор при включение света в ванной
+    - alias: "turnsOffFanLowHumidity" #Выключает вентилятор
       trigger:
         platform: state
-        entity_id: switch.0xec1bbdfffe6c143e_right
-        to: "on"
-        for:
-          seconds: 60
-      condition:
-        condition: state
-        entity_id: binary_sensor.0x00158d0006c3fbf6_contact
-        state: "off"
-      action:
-        - service: switch.turn_off
-          data:
-            entity_id: switch.0x00124b001e721d27
-
-    - alias: "turnsOffFanLowHumidity" #Выключает вентилятор при влажности ниже заданого уровня
-      trigger:
-        platform: template
-        value_template: >-
-          {{states('sensor.humidity_vannay')|int > states('sensor.0x00158d0003cc5589_humidity')|int}}
-        for:
-          seconds: 10
+        entity_id: binary_sensor.hood_bathroom
+        to: "off"
       action:
         - service: switch.turn_off
           data:
