@@ -40,6 +40,14 @@ bathroom:
                         and states('sensor.humidity_vannay')|int < states('sensor.0x00158d0003cc5589_humidity')|int                    
                         and is_state('binary_sensor.sens_day', 'on')
                         }}"
+        attribute_templates:
+          door_open: "{{is_state('binary_sensor.0x00158d0006c3fbf6_contact', 'on')}}"
+          light_off: "{{is_state('switch.0xec1bbdfffe6c143e_right', 'off')}}"
+          humidity_above_threshold: "{{states('sensor.humidity_vannay')|int < states('sensor.0x00158d0003cc5589_humidity')|int}}"
+          day: "{{is_state('binary_sensor.sens_day', 'on')}}"
+          threshold: "{{states('sensor.humidity_vannay')|int}}"
+          humidity: "{{states('sensor.0x00158d0003cc5589_humidity')|int}}"
+
 
 ##############
   automation: #Автоматизации
