@@ -32,3 +32,9 @@
 +	[	Xiaomi	WXKG02LM_rev2	](https://www.zigbee2mqtt.io/devices/WXKG02LM_rev2.html#xiaomi-wxkg02lm_rev2)
 +	[	Xiaomi	ZNLDP12LM	](https://www.zigbee2mqtt.io/devices/ZNLDP12LM.html#xiaomi-znldp12lm)
 +	[	Zemismart	ZM-L03E-Z	](https://www.zigbee2mqtt.io/devices/ZM-L03E-Z.html#zemismart-zm-l03e-z) 2 thing
+
+## My notes (in Russian) on [sprut.ai](https://sprut.ai):
++ [Защита от протечки воды](https://sprut.ai/client/blog/2503)
++ [Свет и управление комнатной батареей](https://sprut.ai/client/blog/2639)
++ [Плавное управление термоголовой за счет калибровки внутреннего термодатчика](https://sprut.ai/client/blog/3793)
++ [Датчик температуры/давления/влажности на улице](https://sprut.ai/client/blog/3794)
