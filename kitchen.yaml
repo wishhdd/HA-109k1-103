@@ -1,13 +1,12 @@
 kitchen:
-
   ##############
   timer:
     ##############
     move_led:
       duration: "00:05:00"
-##############
+  ##############
   sensor: #Сенсторы
-##############
+    ##############
     # Необходимая влажность в ванной
     - platform: template
       sensors:
@@ -17,16 +16,20 @@ kitchen:
           icon_template: mdi:thermometer
           value_template: >-
             {{((states('sensor.0x00158d0004189010_temperature')|float+ states('sensor.0x00158d000418243c_temperature')|float)/2)|round(1)}}
-##############
-  automation: #Автоматизации
-##############
+          attribute_templates:
+            Температура_на_кухне: "{{states('sensor.0x00158d0004189010_temperature')|float}}"
+            Температура_на_лоджии: "{{states('sensor.0x00158d000418243c_temperature')|float}}"
 
-    - alias: "windowsillLightByMovement" # 
+  ##############
+  automation: #Автоматизации
+    ##############
+
+    - alias: "windowsillLightByMovement" #
       trigger:
         platform: state
-        entity_id: 
-              - binary_sensor.0xbc33acfffe500c22_occupancy
-              - binary_sensor.0x00158d0003cf2082_occupancy
+        entity_id:
+          - binary_sensor.0xbc33acfffe500c22_occupancy
+          - binary_sensor.0x00158d0003cf2082_occupancy
         to: "on"
       condition:
         condition: and
@@ -35,7 +38,7 @@ kitchen:
             entity_id: sun.sun
             state: "below_horizon"
           - condition: state
-            entity_id: 
+            entity_id:
               - switch.0x00158d00044b1aaf_l1 # Подсветка линия 1
               - switch.0x00158d00044b1aaf_l2 # Подсветка линия 2
               - switch.0x60a423fffeaae3a6_left # выключатель на лоджии
@@ -43,6 +46,11 @@ kitchen:
               - switch.0x60a423fffeaae3a6_right # выключатель на лоджии
             state: "off"
       action:
+        - service: select.select_option
+          target:
+            entity_id: select.wled_preset
+          data:
+            option: Nightlight
         - service: light.turn_on
           data:
             entity_id: light.wled # Подсветка подоконика
@@ -60,7 +68,6 @@ kitchen:
         - service: light.turn_off
           data:
             entity_id: light.wled # Подсветка подоконика
-
 
     - alias: "switchLightFromBelow" #Один клик переключает нижний свет
       trigger:
@@ -98,9 +105,9 @@ kitchen:
       action:
         - service: switch.turn_off
           target:
-            entity_id: 
-              - switch.0x680ae2fffe71aff5_left  # люстра
-              - switch.0x842e14fffefce063_l2  # Подсвтека батареи
+            entity_id:
+              - switch.0x680ae2fffe71aff5_left # люстра
+              - switch.0x842e14fffefce063_l2 # Подсвтека батареи
 
     - alias: "lightSwitchB4H"
       trigger:
@@ -110,8 +117,8 @@ kitchen:
       action:
         - service: switch.turn_off
           data:
-            entity_id: 
-              - switch.0xec1bbdfffe6c143e_right  # свет в ванной
+            entity_id:
+              - switch.0xec1bbdfffe6c143e_right # свет в ванной
 
     - alias: "lightCeilingLeftRight"
       trigger:
@@ -158,7 +165,7 @@ kitchen:
         - service: switch.turn_on
           target:
             entity_id:
-              - switch.0x60a423fffeaae3a6_left 
+              - switch.0x60a423fffeaae3a6_left
               - switch.0x60a423fffeaae3a6_center # выключтель на лоджии
 
     - alias: "lightLoggiaAllOff"
@@ -170,7 +177,7 @@ kitchen:
         - service: switch.turn_off
           target:
             entity_id:
-              - switch.0x60a423fffeaae3a6_left 
+              - switch.0x60a423fffeaae3a6_left
               - switch.0x60a423fffeaae3a6_center # выключтель на лоджии
               - switch.0x60a423fffeaae3a6_right
         - service: light.turn_off
@@ -204,7 +211,7 @@ kitchen:
         data_template:
           title: "❗❗❗☢☢☢❗❗❗"
           message: "Радиоционный фон привысил отметку 50 мР в час  и составляет {{ states('sensor.0x00124b001ed11c18_radiation_dose_per_hour')|float }} мР в час ."
-#
+  #
   climate: #Климат
     #
     - platform: generic_thermostat
@@ -215,11 +222,11 @@ kitchen:
       max_temp: 27
       target_temp: 24
       ac_mode: false
-      min_cycle_duration:
-        seconds: 180
+      #min_cycle_duration:
+      #  seconds: 180
       initial_hvac_mode: "heat"
       precision: 0.5
-      cold_tolerance: 0.4
+      cold_tolerance: 0.2
       hot_tolerance: 0.2
       keep_alive:
-        minutes: 30
+        minutes: 15

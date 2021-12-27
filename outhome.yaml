@@ -65,6 +65,6 @@ outhome:
           target:
             entity_id:
               - climate.0xbc33acfffe5ec782 # Теплый пол на лоджии
-              - climate.ballu_heater_01 # обогревать Баллу
+            #  - climate.ballu_heater_01 # обогревать Баллу
           data:
-            hvac_mode: 'off'
+            hvac_mode: "off"

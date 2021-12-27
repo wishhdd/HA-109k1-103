@@ -1,0 +1,30 @@
+ny:
+  ##############
+  automation: #Автоматизации
+    ##############
+
+    - alias: "NewYearLitUp" # Новый год зажглись
+      trigger:
+        - platform: sun
+          event: sunset
+        - platform: time
+          at: "06:00:00"
+      action:
+        - service: switch.turn_on
+          target:
+            entity_id:
+              - switch.0x60a423fffef8dc96 #ballu_heater
+              - switch.0x60a423fffead7948 #Бойлер
+
+    - alias: "NewYearWillGoOut" # Новый год потухнет
+      trigger:
+        - platform: sun
+          event: sunrise
+        - platform: time
+          at: "00:01:01"
+      action:
+        - service: switch.turn_off
+          target:
+            entity_id:
+              - switch.0x60a423fffef8dc96 #ballu_heater
+              - switch.0x60a423fffead7948 #Бойлер

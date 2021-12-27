@@ -22,27 +22,38 @@ loggia:
             {% else %}
               mdi:window-closed
             {% endif %}
+        loggia_movement:
+          friendly_name: "Движение на лоджие"
+          delay_off:
+            minutes: 4
+          value_template: "{{is_state('binary_sensor.0x00158d0003cf2082_occupancy', 'on')}}"
+        loggia_movement_for_floor_heating:
+          friendly_name: "Теплый пол на лоджии"
+          delay_on:
+            minutes: 6
+          delay_off:
+            minutes: 15
+          value_template: "{{is_state('binary_sensor.loggia_movement', 'on')}}"
 
   ##############
   automation: #Автоматизации
     ##############
 
-    - alias: "timer_start_when_moving_on_loggia" # таймер старт при движении на лоджии
+    # - alias: "timer_start_when_moving_on_loggia" # таймер старт при движении на лоджии
+    #   trigger:
+    #     platform: state
+    #     entity_id: binary_sensor.0x00158d0003cf2082_occupancy
+    #     to: "on"
+    #   action:
+    #     - service: timer.start
+    #       target:
+    #         entity_id: timer.warm_floor
+
+    - alias: "turn_on_floor_heating_by_sensor" # включаем тёплый пол по сенсору
       trigger:
         platform: state
-        entity_id: binary_sensor.0x00158d0003cf2082_occupancy
+        entity_id: binary_sensor.loggia_movement_for_floor_heating
         to: "on"
-      action:
-        - service: timer.start
-          target:
-            entity_id: timer.warm_floor
-
-    - alias: "turn_on_floor_heating_by_timer" # включаем тёплый пол по таймеру
-      trigger:
-        - platform: event
-          event_type: timer.started
-          event_data:
-            entity_id: timer.warm_floor
       action:
         - service: climate.set_temperature
           target:
@@ -52,19 +63,34 @@ loggia:
             temperature: 24
             hvac_mode: "heat"
 
-    - alias: "turnoff_warm_floor_by_timer"
+    - alias: "turnoff_warm_floor_by_sensor" # выключаем тёплый пол по сенсору
       trigger:
-        - platform: event
-          event_type: timer.finished
-          event_data:
-            entity_id: timer.warm_floor
+        platform: state
+        entity_id: binary_sensor.loggia_movement_for_floor_heating
+        to: "off"
       action:
         - service: climate.set_temperature
           target:
             entity_id:
               - climate.0xbc33acfffe5ec782 # Теплый пол на лоджии
           data:
-            temperature: 19
+            temperature: 22
+            hvac_mode: "heat"
+        - delay: 10
+        - service: climate.set_temperature
+          target:
+            entity_id:
+              - climate.0xbc33acfffe5ec782 # Теплый пол на лоджии
+          data:
+            temperature: 20
+            hvac_mode: "heat"
+        - delay: 10
+        - service: climate.set_temperature
+          target:
+            entity_id:
+              - climate.0xbc33acfffe5ec782 # Теплый пол на лоджии
+          data:
+            temperature: 18
             hvac_mode: "heat"
 
     - alias: "turnoff_heating_loggia_if_window_open" # Выклчаем отопление если окно открыто
@@ -79,7 +105,7 @@ loggia:
           target:
             entity_id:
               - climate.0xbc33acfffe5ec782 # Теплый пол на лоджии
-              - climate.ballu_heater_01 # обогревать Баллу
+              # - climate.ballu_heater_01 # обогревать Баллу
           data:
             hvac_mode: "off"
 
@@ -94,7 +120,7 @@ loggia:
         - service: climate.set_hvac_mode
           target:
             entity_id:
-              - climate.ballu_heater_01 # обогревать Баллу
+            #  - climate.ballu_heater_01 # обогревать Баллу
           data:
             hvac_mode: "heat"
 

@@ -22,6 +22,28 @@ hygrostat:
 ##############
   automation: #Автоматизации
 ##############
+
+    - alias: humidityFromTemperature # влажность от температуры
+      trigger:
+        - platform: time_pattern
+          hours: "/3"
+      action:
+        - service: humidifier.set_humidity
+          target:
+            entity_id: 
+              - humidifier.bedroom_hygrostat
+              - humidifier.hall_hygrostat
+          data:
+            humidity: >-
+              {% set outdoorTemperature = states('sensor.0x00158d0006794cbe_temperature')|float %}
+              {% if outdoorTemperature < -20 %}
+              {% set outdoorTemperature = -20 %}
+              {% endif %}
+              {% if outdoorTemperature > 20 %}
+              {% set outdoorTemperature = 20 %}
+              {% endif %}
+              {{ ((outdoorTemperature + 20)*0.375 + 40) | round(0) | int }}
+
     - alias: TurnOffHumidifier # Выключаем увлажнители
       trigger:
         - platform: state

@@ -1,0 +1,49 @@
+title: Бойлер
+type: entities
+entities:
+  - entity: sensor.boiler_condition
+    type: custom:multiple-entity-row
+    name: Бойлер
+    show_state: false
+    hold_action:
+      action: call-service
+      service: switch.toggle
+      service_data:
+        entity_id: switch.0x60a423fffead7948
+    entities:
+      - entity: sensor.boiler_consumption_avg
+        name: среднее
+        unit: ' '
+      - entity: sensor.boiler_month
+        name: месяц
+        unit: ' '
+      - entity: sensor.boiler_consumption_last_month
+        name: прошлый
+        unit: ' '
+  - entity: sensor.boiler_month_dn_night
+    type: custom:multiple-entity-row
+    name: Потребление за месяц
+    state_header: ночь
+    entities:
+      - entity: sensor.boiler_month_dn_day
+        name: день
+  - entity: sensor.boiler_n_money
+    type: custom:multiple-entity-row
+    name: Потратили
+    state_header: ночь
+    entities:
+      - entity: sensor.boiler_d_money
+        name: день
+  - entity: sensor.boiler_all_money_last_month
+    type: custom:multiple-entity-row
+    name: Потратили в месяц
+    state_header: прошый
+    entities:
+      - entity: sensor.boiler_all_money
+        name: этот
+  - entity: input_text.value_water
+    name: Значение ХВС
+  - entity: timer.work_boiler_day
+    name: Таймер работы
+view_layout:
+  position: sidebar

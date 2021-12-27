@@ -8,9 +8,9 @@ ballu_heater:
       name: "ballu_heater_01"
       heater: switch.0x60a423fffef8dc96
       target_sensor: sensor.0x00158d000418243c_temperature
-      min_temp: 20
+      min_temp: 18
       max_temp: 27
-      target_temp: 23
+      target_temp: 20
       ac_mode: false
       min_cycle_duration:
         seconds: 300

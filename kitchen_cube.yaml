@@ -1,0 +1,116 @@
+kitchen_cube:
+  ##############
+  automation: #Автоматизации
+    ##############
+
+    - alias: "ShakingRandomEffect" # Тряска = рандомный эффект
+      trigger:
+        platform: state
+        entity_id: sensor.0x00158d0006ebafe9_action
+        to: "shake"
+      action:
+        - service: light.turn_on
+          target:
+            entity_id: light.wled
+          data:
+            effect: "{{ state_attr('light.wled', 'effect_list') | random }}"
+        - service: switch.turn_on
+          target:
+            entity_id: switch.0x60a423fffeaae3a6_right
+
+    - alias: "FallingRandomColorPalette" # Подкинуть = рандомный палитра
+      trigger:
+        platform: state
+        entity_id: sensor.0x00158d0006ebafe9_action
+        to: "fall"
+      action:
+        - service: select.select_option
+          target:
+            entity_id: select.wled_color_palette
+          data:
+            option: "{{ state_attr('select.wled_color_palette', 'options') | random }}"
+        - service: switch.turn_on
+          target:
+            entity_id: switch.0x60a423fffeaae3a6_right
+
+    - alias: "RandomColor" # рандомный цвет
+      mode: single
+      max_exceeded: silent
+      trigger:
+        platform: state
+        entity_id: sensor.0x00158d0006ebafe9_action
+        to: "flip90"
+      action:
+        - service: select.select_option
+          target:
+            entity_id: select.wled_color_palette
+          data:
+            option: "Default"
+        - delay: 1
+        - service: light.turn_on
+          target:
+            entity_id: light.wled
+          data:
+            effect: "Solid"
+        - delay: 1
+        - service: light.turn_on
+          target:
+            entity_id: light.wled
+          data_template:
+            rgb_color: >-
+              [{{range(0,255)|random|int}},{{range(0,255)|random|int}},{{range(0,255)|random|int}}]
+        - service: switch.turn_on
+          target:
+            entity_id: switch.0x60a423fffeaae3a6_right
+
+    - alias: "ToggleWled" # переключить ленту
+      trigger:
+        platform: state
+        entity_id: sensor.0x00158d0006ebafe9_action
+        to: "flip180"
+      action:
+        - service: switch.toggle
+          target:
+            entity_id: switch.0x60a423fffeaae3a6_right
+
+    - alias: "BrightnessUp" # Яркость вверх
+      mode: queued
+      max: 10
+      trigger:
+        platform: state
+        entity_id: sensor.0x00158d0006ebafe9_action
+        to: "rotate_right"
+      action:
+        - service: light.turn_on
+          target:
+            entity_id: light.wled
+          data_template:
+            brightness: >-
+              {% if state_attr('light.wled', 'brightness') == None %}
+              {{30}}
+              {% else %}
+              {{ state_attr('light.wled', 'brightness')|int + 30}}
+              {% endif %}
+
+    - alias: "BrightnessDown" # Яркость вниз
+      mode: queued
+      max: 10
+      trigger:
+        platform: state
+        entity_id: sensor.0x00158d0006ebafe9_action
+        to: "rotate_left"
+      condition:
+        - condition: state
+          entity_id: light.wled
+          state: "on"
+      action:
+        - service: light.turn_on
+          target:
+            entity_id: light.wled
+          data_template:
+            brightness: >-
+              {% if state_attr('light.wled', 'brightness') == None %}
+              {{0}}
+              {% else %}
+              {{ state_attr('light.wled', 'brightness')|int - 30}}
+              {% endif %}

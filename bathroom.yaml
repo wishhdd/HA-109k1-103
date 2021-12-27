@@ -1,7 +1,7 @@
 bathroom:
-##############
+  ##############
   sensor: #Сенсторы
-##############
+    ##############
     # Необходимая влажность в ванной
     - platform: template
       sensors:
@@ -22,36 +22,35 @@ bathroom:
             {% endif %}
             {{humidity + 5}}
 
-##############
+  ##############
   binary_sensor:
-##############
+    ##############
 
-  - platform: template
-    sensors:
-      hood_bathroom:
-        friendly_name: "Вытяжка в ванной"
-        delay_on:
-          minutes: 1
-        delay_off:
-          minutes: 1
-        value_template: "{{
-                        (is_state('binary_sensor.0x00158d0006c3fbf6_contact', 'on')
-                        or is_state('switch.0xec1bbdfffe6c143e_right', 'off'))
-                        and states('sensor.humidity_vannay')|int < states('sensor.0x00158d0003cc5589_humidity')|int                    
-                        and is_state('binary_sensor.sens_day', 'on')
-                        }}"
-        attribute_templates:
-          door_open: "{{is_state('binary_sensor.0x00158d0006c3fbf6_contact', 'on')}}"
-          light_off: "{{is_state('switch.0xec1bbdfffe6c143e_right', 'off')}}"
-          humidity_above_threshold: "{{states('sensor.humidity_vannay')|int < states('sensor.0x00158d0003cc5589_humidity')|int}}"
-          day: "{{is_state('binary_sensor.sens_day', 'on')}}"
-          threshold: "{{states('sensor.humidity_vannay')|int}}"
-          humidity: "{{states('sensor.0x00158d0003cc5589_humidity')|int}}"
+    - platform: template
+      sensors:
+        hood_bathroom:
+          friendly_name: "Вытяжка в ванной"
+          delay_on:
+            minutes: 1
+          delay_off:
+            minutes: 1
+          value_template: "{{
+            (is_state('binary_sensor.0x00158d0006c3fbf6_contact', 'on')
+            or is_state('switch.0xec1bbdfffe6c143e_right', 'off'))
+            and states('sensor.humidity_vannay')|int < states('sensor.0x00158d0003cc5589_humidity')|int
+            and is_state('binary_sensor.sens_day', 'on')
+            }}"
+          attribute_templates:
+            door_open: "{{is_state('binary_sensor.0x00158d0006c3fbf6_contact', 'on')}}"
+            light_off: "{{is_state('switch.0xec1bbdfffe6c143e_right', 'off')}}"
+            humidity_above_threshold: "{{states('sensor.humidity_vannay')|int < states('sensor.0x00158d0003cc5589_humidity')|int}}"
+            day: "{{is_state('binary_sensor.sens_day', 'on')}}"
+            threshold: "{{states('sensor.humidity_vannay')|int}}"
+            humidity: "{{states('sensor.0x00158d0003cc5589_humidity')|int}}"
 
-
-##############
+  ##############
   automation: #Автоматизации
-##############
+    ##############
 
     - alias: switchingFan2Click #Переключаем вентилятор по двойному клику на куханом выключателе
       trigger:
@@ -66,7 +65,7 @@ bathroom:
     - alias: "bathroomLightMovement" #Включаем свет по движению
       trigger:
         platform: state
-        entity_id: 
+        entity_id:
           - binary_sensor.0x00158d0003979b34_occupancy # Д движения в ванной
           - binary_sensor.0x00158d0006c3fbf6_contact # Д двери в ванной
         to: "on"

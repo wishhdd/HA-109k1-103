@@ -62,7 +62,7 @@ counters:
       mains_voltage:
         friendly_name: "Напряжение сети"
         value_template: "{{ ((states('sensor.0x588e81fffed97bea_voltage')|float 
-        + states('sensor.0x00158d00044b1aaf_voltage')|float) / 2) |int }}"
+          + states('sensor.0x00158d00044b1aaf_voltage')|float) / 2) |int }}"
         icon_template: mdi:alpha-v-circle-outline
         unit_of_measurement: "V"
 
