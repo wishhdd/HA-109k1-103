@@ -20,7 +20,7 @@
 +	[	TuYa	TS0601_thermostat	](https://www.zigbee2mqtt.io/devices/TS0601_thermostat.html#tuya-ts0601_thermostat)
 +	[	TuYa	TS0207_repeater	](https://www.zigbee2mqtt.io/devices/TS0207_repeater.html#tuya-ts0207_repeater)
 +	[	TuYa	WHD02	](https://www.zigbee2mqtt.io/devices/WHD02.html#tuya-whd02)
-+	[	TuYa	TS0121_plug	](https://www.zigbee2mqtt.io/devices/TS0121_plug.html#tuya-ts0121_plug) 2 thing
++	[	TuYa	TS0121_plug	](https://www.zigbee2mqtt.io/devices/TS0121_plug.html#tuya-ts0121_plug) 3 thing
 +	[	TuYa	TS0601_din	](https://www.zigbee2mqtt.io/devices/TS0601_din.html#tuya-ts0601_din)
 +	[	Xiaomi	LLKZMK11LM	](https://www.zigbee2mqtt.io/devices/LLKZMK11LM.html#xiaomi-llkzmk11lm)
 +	[	Xiaomi	MCCGQ01LM	](https://www.zigbee2mqtt.io/devices/MCCGQ01LM.html#xiaomi-mccgq01lm) 10 thing
@@ -32,3 +32,10 @@
 +	[	Xiaomi	WXKG02LM_rev2	](https://www.zigbee2mqtt.io/devices/WXKG02LM_rev2.html#xiaomi-wxkg02lm_rev2)
 +	[	Xiaomi	ZNLDP12LM	](https://www.zigbee2mqtt.io/devices/ZNLDP12LM.html#xiaomi-znldp12lm)
 +	[	Zemismart	ZM-L03E-Z	](https://www.zigbee2mqtt.io/devices/ZM-L03E-Z.html#zemismart-zm-l03e-z) 2 thing
++	[ Xiaomi MFKZQ01LM ](https://www.zigbee2mqtt.io/devices/MFKZQ01LM.html)
+
+### My notes (in Russian) on [sprut.ai](https://sprut.ai):
++ [Защита от протечки воды](https://sprut.ai/client/blog/2503)
++ [Свет и управление комнатной батареей](https://sprut.ai/client/blog/2639)
++ [Плавное управление термоголовой за счет калибровки внутреннего термодатчика](https://sprut.ai/client/blog/3793)
++ [Датчик температуры/давления/влажности на улице](https://sprut.ai/client/blog/3794)
