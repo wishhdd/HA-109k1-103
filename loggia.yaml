@@ -146,22 +146,35 @@ loggia:
         - service: light.turn_off
           target:
             entity_id: light.wled
-#    - alias: "ledOn-rightButtonOn" #
-#      trigger:
-#        platform: state
-#        entity_id: light.wled
-#        to: "on"
-#      action:
-#        - service: switch.turn_on
-#          target:
-#            entity_id: switch.0x60a423fffeaae3a6_right
 
-#    - alias: "ledOff-rightButtonOff" #
-#      trigger:
-#        platform: state
-#        entity_id: light.wled
-#        to: "off"
-#      action:
-#        - service: switch.turn_off
-#          target:
-#            entity_id: switch.0x60a423fffeaae3a6_right
+    - alias: "PC_working_floor_warming" # ПК работает - пол греется
+      trigger:
+        platform: state
+        entity_id: binary_sensor.WishGamePC
+        to: "on"
+        for:
+          minutes: 2
+      action:
+        - service: climate.set_temperature
+          target:
+            entity_id:
+              - climate.0xbc33acfffe5ec782 # Теплый пол на лоджии
+          data:
+            temperature: 21
+            hvac_mode: "heat"
+
+    - alias: "PC_working_floor_off" # ПК не работает - пол не греется
+      trigger:
+        platform: state
+        entity_id: binary_sensor.WishGamePC
+        to: "off"
+        for:
+          minutes: 2
+      action:
+        - service: climate.set_temperature
+          target:
+            entity_id:
+              - climate.0xbc33acfffe5ec782 # Теплый пол на лоджии
+          data:
+            temperature: 18
+            hvac_mode: "heat"

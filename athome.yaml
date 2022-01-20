@@ -17,3 +17,10 @@ athome:
             #  - climate.ballu_heater_01 # обогревать Баллу
           data:
             hvac_mode: "heat"
+        - delay: 5
+        - service: climate.set_hvac_mode # Включаем электро обогреватели
+          target:
+            entity_id:
+              - climate.0xbc33acfffe5ec782 # Теплый пол на лоджии
+          data:
+            hvac_mode: "heat"

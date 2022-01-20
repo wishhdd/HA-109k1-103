@@ -12,8 +12,8 @@ hall:
           value_template: >-
             {{((states('sensor.0x00158d0004186ed6_temperature')|float+ states('sensor.0x00158d00063dd803_temperature')|float)/2)|round(1)}}
           attribute_templates:
-            Температура_у_окна: "{{states('sensor.0x00158d0004186ed6_temperature')|float}}"
-            Температура_у_ТВ: "{{states('sensor.0x00158d00063dd803_temperature')|float}}"
+            Температура_у_окна: "{{states('sensor.0x00158d00063dd803_temperature')|float}}"
+            Температура_у_ТВ: "{{states('sensor.0x00158d0004186ed6_temperature')|float}}"
 
         condition_tv_hall: # Состояние телевизора
           friendly_name: "Состояние телевизора в зале"
@@ -51,17 +51,14 @@ hall:
         presence_hall:
           friendly_name: "Кто то есть в зале"
           delay_off:
-            minutes: 10
+            minutes: 5
           value_template: >
             is_state('binary_sensor.0x000d6f00159a3ed7_occupancy', 'on')
             or is_state('sensor.condition_tv_hall', 'work')
-            or is_state('binary_sensor.WishGamePC', 'on')
             or is_state('binary_sensor.sens_day', 'on')
-
           attribute_templates:
             motion_sensor: "{{is_state('binary_sensor.0x000d6f00159a3ed7_occupancy', 'on')}}"
             tv_on: "{{is_state('sensor.condition_tv_hall', 'work')}}"
-            game_pc_on: "{{is_state('binary_sensor.WishGamePC', 'on')}}"
             day: "{{is_state('binary_sensor.sens_day', 'on')}}"
 
   ##############
@@ -78,7 +75,7 @@ hall:
             entity_id:
               - switch.0x680ae2fffe71aff5_left #Свет батареи
 
-    - alias: "TurnOffLightsHallI" # выключаем свет в зале если не кого нет
+    - alias: "TurnOffLightsHall" # выключаем свет в зале если не кого нет
       trigger:
         platform: state
         entity_id: binary_sensor.presence_hall
@@ -87,7 +84,7 @@ hall:
         - service: switch.turn_off
           target:
             entity_id:
-              - switch.0x680ae2fffe71aff5_left #Свет батареи
+              - switch.0x842e14fffefce063_l2 #Свет батареи
               - switch.0x680ae2fffe71aff5_left #центральный свет
 
     - alias: " turnoff_heating_hall_if_window_open" # Выклчаем отопление если окно открыто
@@ -217,26 +214,6 @@ hall:
         - service: switch.turn_off
           data:
             entity_id: switch.0x680ae2fffe71aff5_right
-
-    - alias: "solderingIronOn" #Выключение пояльника если меня нет дома
-      trigger:
-        platform: state
-        entity_id: switch.0x842e14fffefce063_l1
-        to: "on"
-        for:
-          seconds: 5
-      condition:
-        - condition: state
-          entity_id: device_tracker.mate_20
-          state: "not_home"
-      action:
-        - service: switch.turn_off
-          data:
-            entity_id: switch.0x842e14fffefce063_l1
-        - delay: 2
-        - service: notify.telegram96
-          data:
-            message: "Кто включил пояльник?"
 
     - alias: turnOffEverythingHallByLong-holdingLeftInKitchen #Выключение всего в зале по длинному удержанию левой (нижней кнопки)
       trigger:
